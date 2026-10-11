@@ -4,7 +4,16 @@
 html, body { margin: 0; padding: 0; }
 
 body {
-  background: var(--color-bg);
+  /* 粉白斜格纹：两组 45° 半透明粉条交叉，形成白 / 浅粉 / 深粉三种菱形 */
+  background-color: var(--color-bg);
+  background-image:
+    repeating-linear-gradient(45deg,
+      var(--color-gingham) 0 var(--gingham-stripe),
+      transparent var(--gingham-stripe) calc(var(--gingham-stripe) * 2)),
+    repeating-linear-gradient(-45deg,
+      var(--color-gingham) 0 var(--gingham-stripe),
+      transparent var(--gingham-stripe) calc(var(--gingham-stripe) * 2));
+  background-attachment: fixed;  /* 滚动时格纹不动，更像墙纸 */
   color: var(--color-text);
   font-family: var(--font-body);
   font-size: 16px;
@@ -15,6 +24,8 @@ body {
 }
 
 h1, h2, h3 { margin: 0 0 8px; line-height: 1.3; }
+p { margin: 0 0 8px; }
+img { max-width: 100%; display: block; }
 
 /* 标题、数字、按钮用点阵标题字体；不让浏览器自动加粗，以免点阵变糊 */
 h1, h2, h3, .btn, .num, .nav-brand {
@@ -24,10 +35,9 @@ h1, h2, h3, .btn, .num, .nav-brand {
 }
 h1 { font-size: var(--text-title-lg); }
 h2, h3 { font-size: var(--text-title-md); }
-p { margin: 0 0 8px; }
-img { max-width: 100%; display: block; }
 
 .page {
+  position: relative;
   max-width: 560px;
   margin: 0 auto;
   padding: var(--gutter);
@@ -43,7 +53,7 @@ img { max-width: 100%; display: block; }
   padding-bottom: env(safe-area-inset-bottom);
   display: flex;
   background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
+  border-top: var(--border-dashed);
   z-index: 10;
 }
 
@@ -55,15 +65,25 @@ img { max-width: 100%; display: block; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 4px;
   color: var(--color-text-soft);
   text-decoration: none;
   font-size: 12px;
 }
 
-.nav-icon { font-size: 22px; line-height: 1; }
+/* 导航图标：像素 SVG 当遮罩，颜色跟随文字 */
+.nav-icon {
+  width: 22px;
+  height: 22px;
+  background-color: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+}
+.nav-icon-egg  { --icon: url("../assets/nav/egg.svg"); }
+.nav-icon-book { --icon: url("../assets/nav/book.svg"); }
+.nav-icon-gear { --icon: url("../assets/nav/gear.svg"); }
 
-.nav-item.is-active { color: var(--color-accent-strong); font-weight: 700; }
+.nav-item.is-active { color: var(--color-pink-700); }
 
 /* 电脑：左侧边栏 */
 @media (min-width: 768px) {
@@ -75,11 +95,12 @@ img { max-width: 100%; display: block; }
     padding: 24px 12px;
     gap: 4px;
     border-top: none;
-    border-right: 1px solid var(--color-border);
+    border-right: var(--border-dashed);
   }
   .nav-brand {
     display: block;
     font-size: 32px;
+    color: var(--color-pink-600);
     padding: 0 12px 16px;
   }
   .nav-item {
@@ -91,7 +112,7 @@ img { max-width: 100%; display: block; }
     border-radius: var(--radius-sm);
     font-size: 16px;
   }
-  .nav-item.is-active { background: var(--color-pink); color: var(--color-text); }
+  .nav-item.is-active { background: var(--color-pink-100); color: var(--color-text); }
   .page {
     margin-left: 200px;
     margin-right: auto;

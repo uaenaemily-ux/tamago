@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- 原创手绘四角星：轻微抖动的线条，模拟蜡笔质感 -->
+  <defs>
+    <filter id="wobble" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="3"/>
+      <feDisplacementMap in="SourceGraphic" scale="3"/>
+    </filter>
+  </defs>
+  <g filter="url(#wobble)" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M50 6 C53 36 60 45 94 50 C61 54 54 63 50 96 C46 63 39 55 6 50 C40 45 47 35 50 6 Z"
+          fill="#FCE4EC" stroke="#8A6474" stroke-width="3"/>
+    <path d="M50 30 C51 44 55 48 64 50" fill="none" stroke="#FFFFFF" stroke-width="4"/>
+  </g>
+</svg>

@@ -1,13 +1,32 @@
-/* 通用组件：卡片、按钮 */
+/* 通用组件：卡片、按钮、装饰 */
+
+/* 卡片：白底 + 粉色虚线 + 偏移粉影 */
 .card {
   background: var(--color-surface);
+  border: var(--border-dashed);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
   padding: var(--gutter);
   margin-bottom: var(--gutter);
 }
 
-.page-title { margin-bottom: 12px; }
+/* 页面标题：两侧像素天使翅膀 */
+.page-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 8px 0 16px;
+  color: var(--color-pink-600);
+}
+.page-title::before,
+.page-title::after {
+  content: "";
+  width: 24px;
+  height: 22px;
+  background: url("../assets/deco/pixel-wing.svg") center / contain no-repeat;
+}
+.page-title::before { transform: scaleX(-1); }
 
 .muted { color: var(--color-text-soft); font-size: 14px; }
 
@@ -17,12 +36,60 @@
   justify-content: center;
   min-height: 44px;            /* 手指好点的最小高度 */
   padding: 0 20px;
-  border: none;
+  border: 2px solid var(--color-pink-200);
   border-radius: var(--radius-pill);
   background: var(--color-yellow);
   color: var(--color-text);
   font-size: var(--text-title-md);  /* 字体在 base.css 统一设置 */
   cursor: pointer;
+  text-decoration: none;
 }
 
-.btn-primary { background: var(--color-accent); color: #fff; }
+/* 主按钮：粉底深字（白字在浅粉上看不清） */
+.btn-primary {
+  background: var(--color-pink-200);
+  border-color: var(--color-pink-600);
+  color: var(--color-text);
+}
+
+/* 装饰小图标：<span class="deco deco-heart"></span> */
+.deco {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background: var(--deco) center / contain no-repeat;
+  vertical-align: middle;
+  pointer-events: none;
+}
+.deco-heart   { --deco: url("../assets/deco/pixel-heart.svg"); }
+.deco-star    { --deco: url("../assets/deco/pixel-star.svg"); }
+.deco-sparkle { --deco: url("../assets/deco/hand-sparkle.svg"); width: 28px; height: 28px; }
+.deco-wing    { --deco: url("../assets/deco/hand-wing.svg"); width: 48px; height: 38px; }
+.deco-wing-left { transform: scaleX(-1); }
+
+/* 天使翅膀 + 中间内容的组合（用于空状态等） */
+.angel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+/* 居中的空状态卡片 */
+.empty {
+  text-align: center;
+  padding: 24px var(--gutter);
+}
+.empty .angel { margin-bottom: 8px; }
+
+/* 散落在卡片角落的手绘闪光 */
+.card-sparkles { position: relative; }
+.card-sparkles::before,
+.card-sparkles::after {
+  content: "";
+  position: absolute;
+  background: url("../assets/deco/hand-sparkle.svg") center / contain no-repeat;
+  pointer-events: none;
+}
+.card-sparkles::before { width: 28px; height: 28px; top: -12px; right: 12px; }
+.card-sparkles::after  { width: 18px; height: 18px; top: 8px; right: -8px; }

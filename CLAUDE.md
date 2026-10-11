@@ -18,7 +18,8 @@
 - `js/modals/`：friend-form、gift-form
 - `js/vendor/idb-keyval.js`：本地保存的第三方库，不走 CDN
 - `fonts/`：QiuYeYuanTi-16.ttf（原字体，只用来截取）、tamago-title.woff2（网页实际加载的截取版）、OFL.txt（授权）
-- `tools/subset-font.py`：截取标题字体
+- `tools/subset-font.py`：截取标题字体；`tools/pixel-icons.py`：生成像素图标
+- `assets/deco/`：装饰图（手绘 hand-*、像素 pixel-*）；`assets/nav/`：导航图标
 - `design-refs/`：美术参考图，已加入 .gitignore，不提交；只参考氛围，所有图案和插画必须原创
 
 ## 字体
@@ -57,8 +58,19 @@
 
 ## 代码约定
 - 每个页面 js/pages/*.js 导出 render(container, params)
-- 设计变量集中在 css/tokens.css（奶白底、baby blue / pastel pink / cream yellow、深色文字、大圆角）
+- 设计变量集中在 css/tokens.css，不在其他地方写死颜色
 - 蛋为统一原创造型（assets/egg.svg），只换颜色；不使用任何原作角色、名称、纹样
+
+## 视觉风格（甜美梦幻 + 天使元素）
+- 背景：粉白斜格纹（两组 45° 半透明粉条交叉，形成白 / 浅粉 / 深粉菱形，非常淡；条宽 --gingham-stripe）
+- 卡片：白底、2px 粉色虚线边框、大圆角、偏移实色粉影（像贴纸）
+- 配色：主色粉（--color-pink-*），点缀 baby blue / 奶黄 / 薄荷 / 薰衣草；文字用暖深色 --color-text
+- 装饰两种都用，稀疏点缀、多留白：
+  - 手绘线条（带轻微抖动的蜡笔感）：assets/deco/hand-*.svg（闪光星星、天使翅膀）
+  - 像素小图标：assets/deco/pixel-*.svg（爱心、星星、天使翅膀），导航图标 assets/nav/*.svg
+  - 用法：`<span class="deco deco-heart">`；页面标题 .page-title 两侧自动加像素翅膀；.card-sparkles 给卡片角落加手绘闪光
+- 像素图标由 `python3 tools/pixel-icons.py` 从字符画生成；新增图标改脚本里的字符画再运行
+- 原创性：design-refs/ 只参考氛围。不得使用原作角色、扑克牌花色加黑色腰带的蛋纹、问号蛋 / X 蛋、锁和钥匙道具，也不得使用三丽鸥等现成角色
 - 界面文字以中文为主
 
 ## P0 开发顺序

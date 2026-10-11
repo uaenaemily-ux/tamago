@@ -1,4 +1,5 @@
-/* 设计变量：颜色、字体、圆角、间距都在这里统一修改 */
+/* 设计变量：颜色、字体、圆角、间距都在这里统一修改
+   风格：甜美梦幻 —— 粉白格纹背景、白色卡片 + 粉色虚线边框、手绘 + 像素装饰、天使元素 */
 
 /* 标题字体：秋叶圆体 16 的截取版，改名为 Tamago Title（OFL 1.1，见 fonts/OFL.txt）
    这是 16px 点阵字体，字号用 16 的整数倍（16 / 32 / 48px）最清晰。
@@ -12,18 +13,35 @@
 }
 
 :root {
-  /* 颜色 */
-  --color-bg: #FFFBF3;          /* 奶白底色 */
+  /* 颜色：底色 */
+  --color-bg: #FFFAFC;          /* 粉调奶白（格纹的底） */
+  --color-gingham: rgba(236, 180, 206, 0.18);  /* 斜格纹的粉色条，两条交叉处自动变深 */
+  --gingham-stripe: 24px;       /* 斜条宽度；菱形大小随之变化 */
   --color-surface: #FFFFFF;     /* 卡片 */
-  --color-text: #2E3550;        /* 深蓝灰文字 */
-  --color-text-soft: #6B7290;   /* 次要文字 */
-  --color-border: #EFE6D6;
 
-  --color-blue: #BFE3F5;        /* baby blue */
-  --color-pink: #F9D1DC;        /* pastel pink */
-  --color-yellow: #FCEFC0;      /* cream yellow */
-  --color-accent: #F2A7BC;      /* 主按钮、选中态 */
-  --color-accent-strong: #D9718F;
+  /* 颜色：文字（暖深色，保证在浅底上清晰） */
+  --color-text: #4A3B44;
+  --color-text-soft: #7A6470;
+
+  /* 颜色：主色粉 */
+  --color-pink-50: #FFF1F5;
+  --color-pink-100: #FCE4EC;
+  --color-pink-200: #F7B8CB;    /* 虚线边框 */
+  --color-pink-400: #F2A7BC;
+  --color-pink-600: #D9718F;    /* 大标题（32px 以上）、边框强调 */
+  --color-pink-700: #B84D70;    /* 小字号的强调文字，白底对比度 ≥ 4.5 */
+
+  /* 颜色：点缀色 */
+  --color-blue: #C9E6F7;        /* baby blue */
+  --color-yellow: #FFF1C1;      /* cream yellow */
+  --color-mint: #CFF1E6;
+  --color-lavender: #E6DAF7;
+
+  /* 兼容旧名称 */
+  --color-pink: var(--color-pink-100);
+  --color-accent: var(--color-pink-400);
+  --color-accent-strong: var(--color-pink-600);
+  --color-border: var(--color-pink-200);
 
   /* 字体
      正文：苹果设备用苹方；Windows 用微软雅黑；安卓 / Linux 用思源黑体（Noto Sans CJK）或文泉驿
@@ -39,13 +57,18 @@
 
   /* 圆角 */
   --radius-sm: 12px;
-  --radius-md: 20px;
-  --radius-lg: 28px;
+  --radius-md: 24px;
+  --radius-lg: 32px;
   --radius-pill: 999px;
+
+  /* 边框：粉色虚线 */
+  --border-dashed: 2px dashed var(--color-pink-200);
 
   /* 间距 */
   --gutter: 16px;
   --nav-height: 64px;
 
-  --shadow-card: 0 4px 16px rgba(46, 53, 80, 0.06);
+  /* 阴影：偏移的实色粉影，像贴纸 */
+  --shadow-card: 4px 4px 0 var(--color-pink-100);
+  --glow-pink: 0 0 24px rgba(247, 184, 203, 0.55);
 }
