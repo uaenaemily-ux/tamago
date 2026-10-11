@@ -1,0 +1,28 @@
+/* 通用组件：卡片、按钮 */
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: var(--gutter);
+  margin-bottom: var(--gutter);
+}
+
+.page-title { margin-bottom: 12px; }
+
+.muted { color: var(--color-text-soft); font-size: 14px; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;            /* 手指好点的最小高度 */
+  padding: 0 20px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-yellow);
+  color: var(--color-text);
+  font-size: var(--text-title-md);  /* 字体在 base.css 统一设置 */
+  cursor: pointer;
+}
+
+.btn-primary { background: var(--color-accent); color: #fff; }

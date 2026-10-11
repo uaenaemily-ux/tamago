@@ -1,1 +1,8 @@
 .DS_Store
+.Rhistory
+
+# Python 虚拟环境（截取字体工具用）
+.venv/
+
+# 美术参考图：仅本地参考，不提交
+design-refs/

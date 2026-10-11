@@ -17,6 +17,19 @@
 - `js/pages/`：welcome、home、directory、detail、incubator、settings
 - `js/modals/`：friend-form、gift-form
 - `js/vendor/idb-keyval.js`：本地保存的第三方库，不走 CDN
+- `fonts/`：QiuYeYuanTi-16.ttf（原字体，只用来截取）、tamago-title.woff2（网页实际加载的截取版）、OFL.txt（授权）
+- `tools/subset-font.py`：截取标题字体
+- `design-refs/`：美术参考图，已加入 .gitignore，不提交；只参考氛围，所有图案和插画必须原创
+
+## 字体
+- 正文：系统字体（苹方，非苹果设备退回微软雅黑 / 思源黑体 / 文泉驿），变量 `--font-body`
+- 标题、数字、按钮：Tamago Title（「秋叶圆体 16」截取改名版），变量 `--font-title`；h1/h2/h3、.btn、.num 自动使用
+- 点阵字体：字号只用 16 的倍数（16 / 32 / 48px），不加粗
+- 授权：SIL OFL 1.1，作者保留名称「秋叶圆体 16」「QiuYeYuanTi 16」，截取版必须用别的名字，保留版权信息和 fonts/OFL.txt
+- **新增或修改界面文案后，必须重新截取字体**：
+  - 第一次使用（或换电脑）先安装工具：`python3 -m venv .venv && .venv/bin/pip install fonttools brotli`
+  - 截取：`.venv/bin/python tools/subset-font.py`（会扫描 index.html 和 js/ 下所有文件，覆盖生成 fonts/tamago-title.woff2）
+- 用户输入的文字（如朋友名字）不在截取范围内，会自动用正文字体显示
 
 ## 数据
 - 存在浏览器 IndexedDB（js/vendor/idb-keyval.js）

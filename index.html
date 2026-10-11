@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#FFFBF3">
+  <title>tamago</title>
+
+  <!-- 标题字体（截取版），提前下载避免标题闪烁 -->
+  <link rel="preload" href="fonts/tamago-title.woff2" as="font" type="font/woff2" crossorigin>
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+  <div class="app">
+    <nav class="nav" aria-label="主导航">
+      <div class="nav-brand">tamago</div>
+      <a class="nav-item" href="#/home" data-route="home">
+        <span class="nav-icon" aria-hidden="true">🥚</span><span>首页</span>
+      </a>
+      <a class="nav-item" href="#/directory" data-route="directory">
+        <span class="nav-icon" aria-hidden="true">📖</span><span>目录</span>
+      </a>
+      <a class="nav-item" href="#/settings" data-route="settings">
+        <span class="nav-icon" aria-hidden="true">⚙️</span><span>设置</span>
+      </a>
+    </nav>
+
+    <main id="page" class="page"></main>
+  </div>
+
+  <div id="modal-root"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+/* 设计变量：颜色、字体、圆角、间距都在这里统一修改 */
+
+/* 标题字体：秋叶圆体 16 的截取版，改名为 Tamago Title（OFL 1.1，见 fonts/OFL.txt）
+   这是 16px 点阵字体，字号用 16 的整数倍（16 / 32 / 48px）最清晰。
+   新增文案后运行 .venv/bin/python tools/subset-font.py 重新截取。 */
+@font-face {
+  font-family: "Tamago Title";
+  src: url("../fonts/tamago-title.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* 颜色 */
+  --color-bg: #FFFBF3;          /* 奶白底色 */
+  --color-surface: #FFFFFF;     /* 卡片 */
+  --color-text: #2E3550;        /* 深蓝灰文字 */
+  --color-text-soft: #6B7290;   /* 次要文字 */
+  --color-border: #EFE6D6;
+
+  --color-blue: #BFE3F5;        /* baby blue */
+  --color-pink: #F9D1DC;        /* pastel pink */
+  --color-yellow: #FCEFC0;      /* cream yellow */
+  --color-accent: #F2A7BC;      /* 主按钮、选中态 */
+  --color-accent-strong: #D9718F;
+
+  /* 字体
+     正文：苹果设备用苹方；Windows 用微软雅黑；安卓 / Linux 用思源黑体（Noto Sans CJK）或文泉驿
+     标题、数字、按钮：Tamago Title，缺字时退回正文字体 */
+  --font-body: -apple-system, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Noto Sans SC", "Noto Sans CJK SC", "Source Han Sans SC",
+    "WenQuanYi Micro Hei", system-ui, sans-serif;
+  --font-title: "Tamago Title", var(--font-body);
+
+  /* 标题字号：点阵字体用 16 的倍数 */
+  --text-title-lg: 32px;
+  --text-title-md: 16px;
+
+  /* 圆角 */
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --radius-pill: 999px;
+
+  /* 间距 */
+  --gutter: 16px;
+  --nav-height: 64px;
+
+  --shadow-card: 0 4px 16px rgba(46, 53, 80, 0.06);
+}
