@@ -9,6 +9,7 @@
 「秋叶圆体 16」「QiuYeYuanTi 16」。截取属于修改，所以输出的字体必须改名，
 这里改为 "Tamago Title"，并保留原版权信息。授权全文见 fonts/OFL.txt。
 """
+import re
 from pathlib import Path
 
 from fontTools import subset
@@ -27,12 +28,21 @@ SKIP_DIRS = {"vendor"}
 ALWAYS = "".join(chr(c) for c in range(0x20, 0x7F)) + "¥·…—–，。、！？：；“”‘’（）《》「」【】～"
 
 
+# JS 里只收集字符串（"..."、'...'、`...`）中的字，注释里的字不需要
+JS_STRING = re.compile(r'"(?:[^"\\\n]|\\.)*"|\'(?:[^\'\\\n]|\\.)*\'|`(?:[^`\\]|\\.)*`', re.S)
+HTML_COMMENT = re.compile(r"<!--.*?-->", re.S)
+
+
 def collect_text():
     chars = set(ALWAYS)
     for path in SCAN:
         if SKIP_DIRS & set(path.relative_to(ROOT).parts):
             continue
-        chars.update(path.read_text(encoding="utf-8"))
+        source = path.read_text(encoding="utf-8")
+        if path.suffix == ".js":
+            chars.update("".join(JS_STRING.findall(source)))
+        else:
+            chars.update(HTML_COMMENT.sub("", source))
     # 去掉换行等控制字符
     return "".join(sorted(c for c in chars if c.isprintable()))
 

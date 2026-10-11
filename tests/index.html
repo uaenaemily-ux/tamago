@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>tamago 测试</title>
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <style>
+    .page { padding-bottom: var(--gutter); }
+    .result { margin: 0; padding: 6px 0; border-bottom: 1px dashed var(--color-pink-100); font-size: 14px; }
+    .result:last-child { border-bottom: none; }
+    .fail { color: #B42318; }
+    .fail-detail { display: block; color: #B42318; font-size: 13px; }
+    .summary-ok { color: #1F7A4D; }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <h1 class="page-title">测试</h1>
+    <div class="card">
+      <h2 id="summary">运行中…</h2>
+      <p class="muted">只检查代码逻辑，使用单独的测试数据库，不会影响你的真实数据。</p>
+    </div>
+    <div id="results"></div>
+  </main>
+  <script type="module" src="tests.js"></script>
+</body>
+</html>

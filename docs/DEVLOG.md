@@ -43,3 +43,15 @@
   - **原因**：一开始没有指定格纹方向
   - **解决**：改为两组 45° 斜条交叉的菱形格纹，颜色调到很淡
 - **备注**：iPhone 的 Safari 不支持 background-attachment: fixed，格纹会跟着页面一起滚，不影响使用
+
+## 第 2 步：数据层（2026-10-11）
+- **结果**：tests/ 测试页 29 项全部通过
+- **问题**：jsDelivr 上 idb-keyval 的授权文件下载失败（404）
+  - **原因**：这个包的授权文件名是英式拼写 `LICENCE`，不是 `LICENSE`
+  - **解决**：按正确的文件名下载，保存为 `js/vendor/idb-keyval.LICENSE`
+- **问题**：加入数据层后，截取的标题字体从 10.8 KB 涨到 25 KB
+  - **原因**：截取脚本把代码注释里的中文也算进去了
+  - **解决**：JS 文件只收集字符串里的文字，HTML 跳过注释，字体降到 14.5 KB
+- **问题**：用局域网地址（http）在手机上测试时，持久存储显示 unsupported
+  - **原因**：浏览器只在 https 或 localhost 下提供持久存储
+  - **解决**：属于正常现象，GitHub Pages 是 https，部署后可以正常申请；生成 id 也改用 crypto.getRandomValues，在 http 下同样能用

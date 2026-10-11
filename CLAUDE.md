@@ -16,7 +16,8 @@
 - `js/ui/`：egg、modal、toast、confirm、dom（安全建元素 el()）
 - `js/pages/`：welcome、home、directory、detail、incubator、settings
 - `js/modals/`：friend-form、gift-form
-- `js/vendor/idb-keyval.js`：本地保存的第三方库，不走 CDN
+- `js/vendor/idb-keyval.js`：本地保存的第三方库（6.2.1，Apache-2.0，授权见同目录 LICENSE），不走 CDN
+- `tests/`：浏览器测试页，打开 http://localhost:8000/tests/ 自动运行；使用单独的测试数据库 "tamago-test"，不碰真实数据。修改 dates / schema / store 后要补测试并全部通过
 - `fonts/`：QiuYeYuanTi-16.ttf（原字体，只用来截取）、tamago-title.woff2（网页实际加载的截取版）、OFL.txt（授权）
 - `tools/subset-font.py`：截取标题字体；`tools/pixel-icons.py`：生成像素图标
 - `assets/deco/`：装饰图（手绘 hand-*、像素 pixel-*）；`assets/nav/`：导航图标
@@ -29,7 +30,7 @@
 - 授权：SIL OFL 1.1，作者保留名称「秋叶圆体 16」「QiuYeYuanTi 16」，截取版必须用别的名字，保留版权信息和 fonts/OFL.txt
 - **新增或修改界面文案后，必须重新截取字体**：
   - 第一次使用（或换电脑）先安装工具：`python3 -m venv .venv && .venv/bin/pip install fonttools brotli`
-  - 截取：`.venv/bin/python tools/subset-font.py`（会扫描 index.html 和 js/ 下所有文件，覆盖生成 fonts/tamago-title.woff2）
+  - 截取：`.venv/bin/python tools/subset-font.py`（扫描 index.html 的文字和 js/ 里字符串中的文字，不含注释和 js/vendor；覆盖生成 fonts/tamago-title.woff2）
 - 用户输入的文字（如朋友名字）不在截取范围内，会自动用正文字体显示
 
 ## 数据
