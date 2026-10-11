@@ -6,7 +6,7 @@
 - 纯静态：原生 HTML/CSS/JS（ES Modules），无框架、无 npm、无构建、无后端、无数据库
 - 部署：GitHub Pages；路由使用 hash（#/home）
 - 手机优先，最小宽度 320px 不出现横向滚动
-- 本地预览：`python3 -m http.server 8000`，打开 http://localhost:8000
+- 本地预览：`python3 tools/serve.py`（禁止缓存，手机测试也能拿到最新文件），打开 http://localhost:8000；手机用电脑的局域网 IP（`ipconfig getifaddr en0`）
 - 当前范围：只做 PRD 中的 P0
 
 ## 文件结构

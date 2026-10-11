@@ -5,11 +5,13 @@ import { el } from "./ui/dom.js";
 import * as home from "./pages/home.js";
 import * as directory from "./pages/directory.js";
 import * as settings from "./pages/settings.js";
+import * as detail from "./pages/detail.js";
 
 const routes = {
   "home": home,
   "directory": directory,
   "settings": settings,
+  "person/:id": detail,
 };
 
 const container = document.getElementById("page");

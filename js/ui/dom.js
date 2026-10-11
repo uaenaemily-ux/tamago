@@ -12,7 +12,11 @@ export function el(tag, attrs = {}, ...children) {
     } else if (key === "class") {
       node.className = value;
     } else if (key === "style" && typeof value === "object") {
-      Object.assign(node.style, value);
+      for (const [prop, v] of Object.entries(value)) {
+        // CSS 变量（--xxx）只能用 setProperty 设置
+        if (prop.startsWith("--")) node.style.setProperty(prop, v);
+        else node.style[prop] = v;
+      }
     } else {
       node.setAttribute(key, value === true ? "" : String(value));
     }

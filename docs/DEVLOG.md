@@ -55,3 +55,15 @@
 - **问题**：用局域网地址（http）在手机上测试时，持久存储显示 unsupported
   - **原因**：浏览器只在 https 或 localhost 下提供持久存储
   - **解决**：属于正常现象，GitHub Pages 是 https，部署后可以正常申请；生成 id 也改用 crypto.getRandomValues，在 http 下同样能用
+
+## 第 3 步：添加 / 编辑朋友 + 目录页（2026-10-11）
+- **结果**：电脑和手机测试通过；原创守护蛋、目录分区和分页、登记 / 编辑弹窗、删除二次确认都正常
+- **问题**：`el()` 用 `style: { "--swatch": color }` 设置 CSS 变量时没有效果
+  - **原因**：`Object.assign(node.style, …)` 不能设置 CSS 变量，必须用 `style.setProperty("--xxx", …)`
+  - **解决**：`el()` 遇到 `--` 开头的属性改用 setProperty
+- **问题**：手机上选蛋颜色的小圆圈全是白色，电脑上正常
+  - **原因**：手机 Safari 缓存了修复前的旧 dom.js，`python3 -m http.server` 没有禁止缓存
+  - **解决**：圆圈改为直接设置 backgroundColor，不依赖 CSS 变量；新增 `tools/serve.py`（Cache-Control: no-store）作为本地预览服务器；手机上清除一次该网站数据后恢复正常
+- **问题**：没有 Node，无法在命令行检查 JS 语法
+  - **原因**：电脑上没装 Node
+  - **解决**：用 macOS 自带的 JavaScriptCore（`osascript -l JavaScript`）检查语法
