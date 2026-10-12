@@ -6,7 +6,8 @@ import { el } from "../ui/dom.js";
 import { openModal } from "../ui/modal.js";
 import { egg } from "../ui/egg.js";
 import { showToast } from "../ui/toast.js";
-import { addPerson, updatePerson, addGift, cleanTags } from "../store.js";
+import { tagEditor } from "../ui/tag-editor.js";
+import { addPerson, updatePerson, addGift } from "../store.js";
 import { EGG_COLORS } from "../schema.js";
 import { daysInMonth, toYMD, todayISO } from "../dates.js";
 
@@ -16,7 +17,6 @@ export function openFriendForm({ person = null, category = "friend", onSaved } =
 
   // ---------- 表单状态 ----------
   let eggColor = person?.eggColor || EGG_COLORS[Math.floor(Math.random() * EGG_COLORS.length)];
-  let tags = [...(person?.tags || [])];
 
   // ---------- 名字 ----------
   const nameInput = el("input", {
@@ -87,37 +87,7 @@ export function openFriendForm({ person = null, category = "friend", onSaved } =
   );
 
   // ---------- 喜好标签 ----------
-  const tagList = el("div", { class: "chips" });
-  const tagInput = el("input", {
-    class: "input", type: "text", maxlength: 20, autocomplete: "off",
-    placeholder: "比如：芭蕾风、Jellycat、最近在学滑雪",
-  });
-  const tagAddBtn = el("button", { class: "btn btn-small", type: "button" }, "添加");
-
-  function renderTags() {
-    tagList.replaceChildren(...tags.map((tag) =>
-      el("span", { class: "chip" }, tag,
-        el("button", {
-          class: "chip-remove", type: "button", "aria-label": `删除标签 ${tag}`,
-          onClick: () => { tags = tags.filter((t) => t !== tag); renderTags(); },
-        }, "×"),
-      )));
-  }
-  function addTagFromInput() {
-    // 支持一次输入多个，用逗号、顿号或空格分隔
-    const parts = tagInput.value.split(/[,，、\s]+/);
-    tags = cleanTags([...tags, ...parts]);
-    tagInput.value = "";
-    renderTags();
-  }
-  tagInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.isComposing) {
-      e.preventDefault(); // 回车添加标签，而不是提交表单
-      addTagFromInput();
-    }
-  });
-  tagAddBtn.addEventListener("click", addTagFromInput);
-  renderTags();
+  const tags = tagEditor({ tags: person?.tags || [] });
 
   // ---------- 最近一次送的礼物（仅添加时） ----------
   const gift = {
@@ -149,8 +119,7 @@ export function openFriendForm({ person = null, category = "friend", onSaved } =
     ),
     el("div", { class: "field" },
       el("span", { class: "field-label" }, "喜好标签"),
-      el("div", { class: "tag-entry" }, tagInput, tagAddBtn),
-      tagList,
+      tags.element,
     ),
     giftSection,
   );
@@ -172,7 +141,7 @@ export function openFriendForm({ person = null, category = "friend", onSaved } =
   // ---------- 保存 ----------
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (tagInput.value.trim()) addTagFromInput(); // 输入框里还没点"添加"的标签也算上
+    tags.flush(); // 输入框里还没点"添加"的标签也算上
 
     const fields = {
       name: nameInput.value,
@@ -183,7 +152,7 @@ export function openFriendForm({ person = null, category = "friend", onSaved } =
         day: daySelect.value ? Number(daySelect.value) : undefined,
       },
       eggColor,
-      tags,
+      tags: tags.getTags(),
     };
 
     // 填了礼物的其他项却没填名称，提醒一下

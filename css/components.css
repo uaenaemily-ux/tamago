@@ -185,7 +185,32 @@
 }
 .detail-head { display: flex; flex-direction: column; align-items: center; text-align: center; }
 .detail-name { margin: 8px 0; overflow-wrap: anywhere; }
-.detail-actions { display: flex; gap: 8px; }
+.detail-actions { display: flex; gap: 8px; margin-top: 4px; }
+.detail-age { font-size: var(--text-title-md); color: var(--color-text-soft); }
+.countdown {
+  margin: 0 0 12px;
+  padding: 4px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--color-yellow);
+  font-family: var(--font-title);
+  font-synthesis: none;
+}
+.info-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  margin: 0 0 12px;
+}
+.info-row {
+  padding: 8px 4px;
+  border-radius: var(--radius-sm);
+  background: var(--color-pink-50);
+}
+.info-row dt { font-size: 12px; color: var(--color-text-soft); }
+.info-row dd { margin: 0; font-size: 14px; overflow-wrap: anywhere; }
+.card h2 .deco-sparkle { width: 20px; height: 20px; }
+.tag-editor { display: flex; flex-direction: column; gap: 10px; }
 
 /* ---------- 弹窗 ---------- */
 body.modal-open { overflow: hidden; }
