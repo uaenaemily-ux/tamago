@@ -27,6 +27,10 @@ export function createDefaultSettings() {
   };
 }
 
+// 偏好记录 preferences 的格式（type 可选，旧数据没有 type 时当作 prefer）：
+//   { id, personId, type: "prefer",  chosen, rejected, createdAt }  "我更喜欢这个！"
+//   { id, personId, type: "dislike", plan, createdAt }               "不喜欢"
+
 export function createDefaultData() {
   return {
     schemaVersion: CURRENT_VERSION,

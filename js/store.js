@@ -262,10 +262,14 @@ export async function deleteGift(id) {
   if (old.photoId) await deletePhoto(old.photoId).catch(() => {});
 }
 
-// ---------- 偏好记录（"我更喜欢这个！"） ----------
+// ---------- 偏好记录 ----------
+// 两种（type 不写时当作 prefer，兼容旧数据）：
+//   prefer：  "我更喜欢这个！"  { type: "prefer", chosen, rejected }
+//   dislike： "不喜欢"          { type: "dislike", plan }
 
-export async function addPreference({ personId, chosen, rejected }) {
-  const pref = { id: newId("pref"), personId, chosen, rejected, createdAt: now() };
+export async function addPreference({ personId, type = "prefer", chosen, rejected, plan }) {
+  const base = { id: newId("pref"), personId, type, createdAt: now() };
+  const pref = type === "dislike" ? { ...base, plan } : { ...base, chosen, rejected: rejected ?? null };
   await commit({ ...state, preferences: [...state.preferences, pref] });
   return pref;
 }

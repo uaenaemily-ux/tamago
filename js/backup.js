@@ -168,10 +168,16 @@ function validateData(data, photos) {
     };
   });
 
-  // 偏好记录：找不到对应的人就跳过（不影响导入）
+  // 偏好记录（"更喜欢" / "不喜欢" 两种）：格式不对或找不到对应的人就跳过（不影响导入）
+  const isObj = (v) => v && typeof v === "object";
   const preferences = data.preferences
-    .filter((p) => p && isText(p.id) && personIds.has(p.personId) && p.chosen && typeof p.chosen === "object")
-    .map((p) => ({ id: p.id, personId: p.personId, chosen: p.chosen, rejected: p.rejected ?? null, createdAt: p.createdAt ?? null }));
+    .filter((p) => p && isText(p.id) && personIds.has(p.personId))
+    .map((p) => {
+      const base = { id: p.id, personId: p.personId, createdAt: isText(p.createdAt) ? p.createdAt : null };
+      if (p.type === "dislike") return isObj(p.plan) ? { ...base, type: "dislike", plan: p.plan } : null;
+      return isObj(p.chosen) ? { ...base, type: "prefer", chosen: p.chosen, rejected: isObj(p.rejected) ? p.rejected : null } : null;
+    })
+    .filter(Boolean);
 
   // 设置只取已知字段；apiKey 一律不从备份里取
   const s = data.settings;

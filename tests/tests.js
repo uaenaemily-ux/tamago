@@ -7,6 +7,9 @@ import * as store from "../js/store.js";
 import { isPhotoDataUrl } from "../js/photos.js";
 import { buildSampleData } from "../js/sample-data.js";
 import { createBackup, parseBackup, importBackup, backupFileName } from "../js/backup.js";
+import { callAI } from "../js/ai.js";
+import { buildPrompt, parsePlans, incubate, findBudget, PLANS_SCHEMA, parseHints, parseIdeas, expandIdeas, cleanKeyword } from "../js/incubator-logic.js";
+import { SHOP_PLATFORMS, buildSearchUrl, buildAppUrl, platformAction, isMobileDevice } from "../js/shop-platforms.js";
 
 const TEST_DB = "tamago-test";
 const groups = [];
@@ -381,6 +384,227 @@ group("备份（backup.js，使用测试数据库）", () => {
     const before = store.getState().people.map((p) => p.name);
     const s = await store.loadState();
     equal(s.people.map((p) => p.name), before);
+  });
+});
+
+// ---------------- 灵感孵化 ----------------
+// 不真的联网：把 fetch 换成假的，按顺序返回准备好的回答
+function fakeFetch(responses) {
+  const calls = [];
+  const original = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url, init, body: JSON.parse(init.body) });
+    const r = responses[Math.min(calls.length - 1, responses.length - 1)];
+    if (r instanceof Error) throw r;
+    return new Response(JSON.stringify(r.body), { status: r.status ?? 200 });
+  };
+  return { calls, restore: () => { globalThis.fetch = original; } };
+}
+const textReply = (text, extra = {}) => ({
+  body: { content: [{ type: "thinking", thinking: "" }, { type: "text", text }], stop_reason: "end_turn", ...extra },
+});
+const PLAN = (label, category, ids = []) => ({
+  label, name: `礼物${label}`, category, priceRange: "约 300 元", style: "实用",
+  reason: "因为 TA 喜欢芭蕾风。", matchedTags: ["芭蕾风"], sameCategoryGiftIds: ids,
+});
+const GIFTS = [
+  { id: "g1", name: "芭蕾挂件", category: "饰品", date: "2025-03-14", occasion: "生日", reaction: "超喜欢" },
+  { id: "g2", name: "香薰", category: "家居", date: "2024-03-14", occasion: "生日", reaction: "" },
+];
+
+group("灵感孵化（ai.js / incubator-logic.js，模拟 AI 回答，不真的联网）", () => {
+  test("请求格式：地址、密钥、浏览器直连、模型、结构化输出、备用模型", async () => {
+    const f = fakeFetch([textReply('{"ok":true}')]);
+    try {
+      const text = await callAI({ system: "S", prompt: "P", schema: PLANS_SCHEMA });
+      const { url, init, body } = f.calls[0];
+      equal([
+        text, url, init.headers["x-api-key"], init.headers["anthropic-dangerous-direct-browser-access"],
+        init.headers["anthropic-version"], init.headers["anthropic-beta"], body.model,
+        body.output_config.format.type, body.output_config.effort, body.fallbacks, body.messages[0].content,
+      ], [
+        '{"ok":true}', "https://api.anthropic.com/v1/messages", "sk-ant-SECRET", "true",
+        "2023-06-01", "server-side-fallback-2026-07-01", "claude-sonnet-5-5",
+        "json_schema", "medium", "default", "P",
+      ]);
+    } finally { f.restore(); }
+  });
+
+  test("错误翻译成中文：密钥不对、余额不足、太忙、断网、被拒绝", async () => {
+    const cases = [
+      [{ status: 401, body: { error: { message: "invalid x-api-key" } } }, "auth"],
+      [{ status: 400, body: { error: { message: "Your credit balance is too low" } } }, "billing"],
+      [{ status: 529, body: {} }, "overloaded"],
+      [new TypeError("Failed to fetch"), "network"],
+      [textReply("", { stop_reason: "refusal" }), "refusal"],
+    ];
+    const codes = [];
+    for (const [reply] of cases) {
+      const f = fakeFetch([reply]);
+      try { await callAI({ system: "S", prompt: "P" }); codes.push("没报错"); }
+      catch (err) { codes.push(err.code); }
+      finally { f.restore(); }
+    }
+    equal(codes, cases.map((c) => c[1]));
+  });
+
+  test("没填密钥：不发请求，直接提示去设置", async () => {
+    const f = fakeFetch([textReply("x")]);
+    await store.updateSettings({ apiKey: "" });
+    try {
+      await throws(() => callAI({ system: "S", prompt: "P" }), "API 密钥");
+      equal(f.calls.length, 0);
+    } finally {
+      f.restore();
+      await store.updateSettings({ apiKey: "sk-ant-SECRET" });
+    }
+  });
+
+  test("提示词包含标签、礼物编号、预算和场合；只发文字", () => {
+    const person = { name: "Mary", category: "friend", birthday: { year: 2000, month: 3, day: 14 }, tags: ["芭蕾风"] };
+    const { prompt } = buildPrompt({ person, gifts: GIFTS, budget: findBudget("200-500"), occasion: "生日", today: TODAY });
+    equal([prompt.includes("- 芭蕾风"), prompt.includes("[g1] 芭蕾挂件"), prompt.includes("200 到 500 元"),
+      prompt.includes("场合：生日"), prompt.includes("26 岁"), prompt.includes("data:image")],
+      [true, true, true, true, true, false]);
+  });
+
+  test("没有标签时提示词写明", () => {
+    const person = { name: "A", category: "family", birthday: { year: null, month: 1, day: 1 }, tags: [] };
+    const { prompt } = buildPrompt({ person, gifts: [], budget: findBudget("lt200"), occasion: "新年", today: TODAY });
+    equal([prompt.includes("（还没有标签）"), prompt.includes("年龄：不详"), prompt.includes("关系：家人")], [true, true, true]);
+  });
+
+  test("同品类：采用 AI 标出的礼物，忽略不存在的编号，并按品类文字补充", () => {
+    const text = JSON.stringify({ plans: [PLAN("A", "饰品", ["g1", "g-不存在"]), PLAN("B", "家居")] });
+    const [a, b] = parsePlans(text, GIFTS);
+    equal([a.sameCategoryGifts.map((g) => g.id), b.sameCategoryGifts.map((g) => g.id)], [["g1"], ["g2"]]);
+  });
+
+  test("回答格式不对：不是 JSON、方案数量不对、缺内容 → 报错", async () => {
+    await throws(() => parsePlans("这不是 JSON", GIFTS), "格式不对");
+    await throws(() => parsePlans(JSON.stringify({ plans: [PLAN("A", "饰品")] }), GIFTS), "数量");
+    await throws(() => parsePlans(JSON.stringify({ plans: [PLAN("A", "饰品"), { ...PLAN("B", "x"), name: "" }] }), GIFTS), "缺少");
+  });
+
+  test("孵化：第一次格式不对会自动重试一次", async () => {
+    const good = JSON.stringify({ plans: [PLAN("A", "体验"), PLAN("B", "书籍")] });
+    const f = fakeFetch([textReply("坏掉的回答"), textReply(good)]);
+    try {
+      const person = store.getState().people[0];
+      const plans = await incubate({ person, gifts: [], budget: findBudget("lt200"), occasion: "生日" });
+      equal([f.calls.length, plans.map((p) => p.label)], [2, ["A", "B"]]);
+    } finally { f.restore(); }
+  });
+
+  test("提示词：按逗号、顿号、空格分开，去重", () => {
+    equal(parseHints(" 可爱，小众、可爱  能天天用 "), ["可爱", "小众", "能天天用"]);
+  });
+
+  test("重新孵化的提示词：写入提示词、不喜欢的方案、已推荐过的方案", () => {
+    const person = { name: "A", category: "friend", birthday: { year: null, month: 1, day: 1 }, tags: [] };
+    const shown = { name: "香薰蜡烛", category: "家居", style: "实用" };
+    const disliked = { name: "保温杯", category: "家居", style: "实用" };
+    const { prompt } = buildPrompt({ person, gifts: [], budget: findBudget("lt200"), occasion: "生日",
+      hints: ["手作"], avoid: [shown, disliked], disliked: [disliked], today: TODAY });
+    equal([prompt.includes("- 手作"), prompt.includes("不喜欢这些方案"), prompt.includes("- 保温杯（家居"),
+      prompt.includes("- 香薰蜡烛"), prompt.split("保温杯").length - 1], [true, true, true, true, 1]);
+  });
+
+  test("灵感清单：3–5 个方向，关键词最多 2 个，像网址的关键词丢掉", () => {
+    const idea = (t, keywords) => ({ title: t, note: "适合", keywords });
+    const ideas = parseIdeas(JSON.stringify({ ideas: [
+      idea("一", ["发夹", "hair clip", "多余的"]),
+      idea("二", ["https://item.taobao.com/x", "芭蕾 发饰"]),
+      idea("三", ["www.example.com"]),
+      idea("四", ["珍珠发夹"]), idea("五", ["相册"]), idea("六", ["胶卷"]), idea("七", ["手链"]),
+    ] }));
+    equal([ideas.length, ideas[0].keywords, ideas[1].keywords, ideas.map((i) => i.title)],
+      [5, ["发夹", "hair clip"], ["芭蕾 发饰"], ["一", "二", "四", "五", "六"]]);
+  });
+
+  test("灵感清单：少于 3 个方向 → 报错", async () => {
+    await throws(() => parseIdeas(JSON.stringify({ ideas: [{ title: "一", note: "", keywords: ["a"] }] })), "太少");
+    equal([cleanKeyword("taobao.com 发夹"), cleanKeyword(" 发夹 "), cleanKeyword("a/b")], [null, "发夹", null]);
+  });
+
+  test("搜索链接：只用配置的模板拼接，关键词会编码，都是 https", () => {
+    const urls = SHOP_PLATFORMS.map((p) => buildSearchUrl(p, "芭蕾 发夹&x"));
+    equal([urls.every((u) => u.startsWith("https://")), urls.every((u) => u.includes(encodeURIComponent("芭蕾 发夹&x"))),
+      buildSearchUrl({ url: "javascript:alert({q})" }, "x"), buildSearchUrl({ url: "http://a.com/?q={q}" }, "x")],
+      [true, true, null, null]);
+  });
+
+  test("手机上淘宝、小红书先打开 App，Amazon 打开网页；电脑上都打开网页", () => {
+    const by = (id) => SHOP_PLATFORMS.find((p) => p.id === id);
+    equal([platformAction(by("taobao"), true), platformAction(by("xiaohongshu"), true), platformAction(by("amazon"), true),
+      platformAction(by("taobao"), false), platformAction(by("xiaohongshu"), false)],
+      ["app", "app", "link", "link", "link"]);
+  });
+
+  test("App 地址：关键词会编码；开头不在白名单里的地址一律拒绝", () => {
+    const by = (id) => SHOP_PLATFORMS.find((p) => p.id === id);
+    equal([
+      buildAppUrl(by("taobao"), "芭蕾 发夹&x"),
+      buildAppUrl(by("xiaohongshu"), "发夹"),
+      buildAppUrl({ appUrl: "javascript://alert({q})" }, "x"),
+      buildAppUrl({ appUrl: "https://evil.example/{q}" }, "x"),
+      buildAppUrl({}, "x"),
+    ], [
+      "taobao://s.taobao.com/search?q=" + encodeURIComponent("芭蕾 发夹&x"),
+      "xhsdiscover://search/result?keyword=" + encodeURIComponent("发夹"),
+      null, null, null,
+    ]);
+  });
+
+  test("识别手机：iPhone、安卓、伪装成 Mac 的 iPad 算手机，Mac 电脑不算", () => {
+    const ua = (userAgent, maxTouchPoints = 0) => ({ userAgent, maxTouchPoints });
+    equal([
+      isMobileDevice(ua("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Mobile/15E148 Safari/604.1")),
+      isMobileDevice(ua("Mozilla/5.0 (Linux; Android 14; Pixel 8) Mobile Safari/537.36")),
+      isMobileDevice(ua("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15", 5)),
+      isMobileDevice(ua("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/131.0 Safari/537.36", 0)),
+    ], [true, true, true, false]);
+  });
+
+  test("展开灵感清单：请求里要求不输出网址，回答是结构化格式", async () => {
+    const reply = JSON.stringify({ ideas: [1, 2, 3].map((n) => ({ title: `方向${n}`, note: "", keywords: [`词${n}`] })) });
+    const f = fakeFetch([textReply(reply)]);
+    try {
+      const person = { name: "A", category: "friend", birthday: { year: null, month: 1, day: 1 }, tags: ["芭蕾风"] };
+      const plan = { name: "发夹", category: "饰品", style: "实用", reason: "因为" };
+      const ideas = await expandIdeas({ person, plan, budget: findBudget("lt200"), occasion: "生日" });
+      const body = f.calls[0].body;
+      equal([ideas.length, body.system.includes("不要输出任何网址"), body.output_config.format.type,
+        body.output_config.effort], [3, true, "json_schema", "low"]);
+    } finally { f.restore(); }
+  });
+
+  test("孵化：两次都不对 → 提示重新孵化", async () => {
+    const f = fakeFetch([textReply("坏"), textReply("还是坏")]);
+    try {
+      const person = store.getState().people[0];
+      await throws(() => incubate({ person, gifts: [], budget: findBudget("lt200"), occasion: "生日" }), "重新孵化");
+      equal(f.calls.length, 2);
+    } finally { f.restore(); }
+  });
+});
+
+group("偏好记录（更喜欢 / 不喜欢）", () => {
+  test("记录不喜欢，并能通过备份导出再导入", async () => {
+    const personId = store.getState().people[0].id;
+    await store.addPreference({ personId, type: "prefer", chosen: { name: "A" }, rejected: { name: "B" } });
+    await store.addPreference({ personId, type: "dislike", plan: { name: "C" } });
+    const parsed = parseBackup(JSON.stringify(await createBackup()));
+    const types = parsed.data.preferences.map((p) => p.type);
+    equal([types.includes("prefer"), types.includes("dislike"),
+      parsed.data.preferences.find((p) => p.type === "dislike").plan.name], [true, true, "C"]);
+  });
+
+  test("旧格式（没有 type）的偏好记录导入后当作「更喜欢」", async () => {
+    const backup = await createBackup();
+    const personId = backup.data.people[0].id;
+    backup.data.preferences = [{ id: "pref_old", personId, chosen: { name: "旧" }, rejected: null }];
+    equal(parseBackup(JSON.stringify(backup)).data.preferences[0].type, "prefer");
   });
 });
 

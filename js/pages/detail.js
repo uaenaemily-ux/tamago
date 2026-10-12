@@ -1,4 +1,4 @@
-// 详情页：头部（名字、年龄、蛋、生日、星座、倒计时）+ 喜好标签 + 礼物墙 + 灵感孵化（第 9 步）
+// 详情页：头部（名字、年龄、蛋、生日、星座、倒计时）+ 喜好标签 + 礼物墙 + 灵感孵化入口
 import { el } from "../ui/dom.js";
 import { egg } from "../ui/egg.js";
 import { confirmDialog } from "../ui/confirm.js";
@@ -35,8 +35,8 @@ export function render(container, { id }) {
     giftWall(person),
     el("section", { class: "card incubator-card" },
       el("h2", {}, el("span", { class: "deco deco-star" }), " 灵感孵化"),
-      el("p", { class: "muted" }, "根据 TA 的喜好和送礼记录，孵化两个礼物方案。"),
-      el("button", { class: "btn btn-primary", type: "button", disabled: true }, "Start（即将开放）"),
+      el("p", { class: "muted" }, "选好预算和场合，AI 会根据 TA 的喜好和送礼记录，孵化两个不同方向的礼物方案。"),
+      el("a", { class: "btn btn-primary", href: `#/incubate/${encodeURIComponent(person.id)}` }, "Start"),
     ),
   );
 }

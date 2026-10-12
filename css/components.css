@@ -758,3 +758,135 @@ body.no-nav .page { margin-left: auto; margin-right: auto; padding-bottom: calc(
 .tips strong { color: var(--color-text); font-weight: 600; }
 .card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .confirm-message { white-space: pre-line; }
+
+/* ---------- 灵感孵化 ---------- */
+.incubator-head { display: flex; align-items: center; gap: 14px; }
+.incubator-head h2 { margin-bottom: 4px; }
+.incubator-head p { margin: 0; }
+.notice {
+  margin: 0 0 var(--gutter);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--color-yellow);
+  font-size: 14px;
+}
+.notice a { margin-left: 6px; color: var(--color-pink-700); }
+.choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.choice { position: relative; }
+.choice input { position: absolute; opacity: 0; pointer-events: none; }
+.choice span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border: 2px solid var(--color-pink-100);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.choice input:checked + span { border-color: var(--color-pink-600); background: var(--color-pink-100); }
+.choice input:focus-visible + span { outline: 3px solid var(--color-blue); outline-offset: 2px; }
+.chip-button { border: none; padding: 6px 12px; font: inherit; font-size: 14px; color: var(--color-text); cursor: pointer; }
+.field .chips { margin-top: 4px; }
+.card-actions.center { justify-content: center; }
+
+/* 孵化中：蛋快速摇晃 + 光晕一明一暗 */
+.hatching { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 32px var(--gutter); }
+.hatching-egg { position: relative; display: flex; justify-content: center; margin-bottom: 8px; }
+.hatching-egg::before {
+  content: "";
+  position: absolute;
+  inset: -20% -40%;
+  background: radial-gradient(closest-side, rgba(247, 184, 203, 0.6), rgba(247, 184, 203, 0));
+  animation: glow-pulse 1.6s ease-in-out infinite;
+  pointer-events: none;
+}
+.hatching-egg .egg { position: relative; }
+.hatching-text { margin: 0; font-family: var(--font-title); font-synthesis: none; font-size: var(--text-title-md); color: var(--color-pink-700); }
+.egg-shake { animation: egg-shake 1.2s ease-in-out infinite; transform-origin: 50% 90%; }
+@keyframes egg-shake {
+  0%, 40%, 100% { transform: rotate(0); }
+  50% { transform: rotate(-8deg); }
+  60% { transform: rotate(7deg); }
+  70% { transform: rotate(-5deg); }
+  80% { transform: rotate(3deg); }
+}
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .egg-shake, .hatching-egg::before { animation: none; }
+}
+
+/* 方案卡片 */
+.result-context { text-align: center; margin: -4px 0 12px; }
+.plan-card { transition: box-shadow 0.2s; }
+.plan-card.is-preferred { box-shadow: 4px 4px 0 var(--color-pink-200), var(--glow-pink); border-color: var(--color-pink-600); }
+.plan-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.plan-label { color: var(--color-pink-700); font-size: var(--text-title-md); }
+.plan-style { padding: 2px 10px; border-radius: var(--radius-pill); background: var(--color-lavender); font-size: 13px; }
+.plan-name { font-family: var(--font-body); font-size: 18px; font-weight: 600; overflow-wrap: anywhere; }
+.plan-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.plan-price { color: var(--color-pink-700); font-weight: 600; }
+.plan-reason { line-height: 1.7; overflow-wrap: anywhere; }
+.chip-tag { background: var(--color-pink-100); padding-right: 12px; }
+.small-print { text-align: center; font-size: 12px; margin-top: 12px; }
+
+/* 同品类提醒 */
+.same-category {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-yellow);
+  font-size: 14px;
+}
+.same-category p { margin-bottom: 8px; }
+.same-category-list { display: flex; flex-wrap: wrap; gap: 10px; }
+.same-category-item { display: flex; flex-direction: column; align-items: center; gap: 2px; width: 64px; }
+.gift-circle-small { width: 48px; height: 48px; }
+.gift-circle-small .deco-gift { width: 22px; height: 22px; }
+
+/* 不喜欢的方案：变淡 */
+.plan-card.is-disliked { opacity: 0.55; }
+.plan-status { margin: 8px 0 0; font-size: 13px; color: var(--color-text-soft); }
+.plan-status:empty { display: none; }
+
+/* 继续 brainstorm */
+.brainstorm h2 { display: flex; align-items: center; gap: 4px; }
+
+/* 灵感清单 */
+.ideas:empty { display: none; }
+.ideas { margin-top: 12px; }
+.ideas-list {
+  padding: 12px;
+  border: var(--border-dashed);
+  border-radius: var(--radius-md);
+  background: var(--color-pink-50);
+}
+.ideas-title { display: flex; align-items: center; gap: 4px; color: var(--color-pink-700); }
+.ideas-list ol { margin: 8px 0 0; padding-left: 20px; }
+.idea + .idea { margin-top: 12px; }
+.idea-title { margin: 0 0 2px; font-weight: 600; overflow-wrap: anywhere; }
+.idea-note { margin: 0 0 6px; }
+.idea-search { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 4px; }
+.idea-keyword { font-size: 14px; overflow-wrap: anywhere; }
+.idea-links { display: flex; flex-wrap: wrap; gap: 6px; }
+.shop-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  border: 2px solid var(--color-pink-200);
+  color: var(--color-pink-700);
+  font-size: 13px;
+  text-decoration: none;
+}
+.shop-link:focus-visible { outline: 3px solid var(--color-blue); outline-offset: 2px; }
+button.shop-link { font: inherit; font-size: 13px; cursor: pointer; }
+
+/* 手机上 App 没打开时的备用提示 */
+.shop-fallback { flex-basis: 100%; margin: 2px 0 0; font-size: 13px; color: var(--color-text-soft); }
+.shop-fallback:empty { display: none; }
+.shop-fallback a { margin-left: 4px; color: var(--color-pink-700); }

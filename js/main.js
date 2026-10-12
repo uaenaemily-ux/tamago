@@ -7,6 +7,7 @@ import * as directory from "./pages/directory.js";
 import * as settings from "./pages/settings.js";
 import * as detail from "./pages/detail.js";
 import * as welcome from "./pages/welcome.js";
+import * as incubator from "./pages/incubator.js";
 
 const routes = {
   "home": home,
@@ -14,6 +15,7 @@ const routes = {
   "settings": settings,
   "person/:id": detail,
   "welcome": welcome,
+  "incubate/:id": incubator,
 };
 
 const container = document.getElementById("page");

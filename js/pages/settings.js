@@ -11,13 +11,14 @@ import { diffDays, toYMD } from "../dates.js";
 import { refresh } from "../router.js";
 
 export function render(container) {
-  container.append(
+  // 注意：浏览器的 append 会把 null 显示成文字 "null"，所以先过滤掉
+  container.append(...[
     el("h1", { class: "page-title" }, "设置"),
     aiCard(),
     backupCard(),
     safetyCard(),
     hasSampleData() ? sampleCard() : null,
-  );
+  ].filter(Boolean));
 }
 
 // ---------- AI 设置 ----------

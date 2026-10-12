@@ -14,6 +14,7 @@
 ## 文件结构
 - `index.html`：唯一的 HTML（底部导航 + 页面容器 + 弹窗容器）；`manifest.webmanifest`：添加到主屏幕
 - `css/`：tokens.css（设计变量）、base.css、components.css
+- `docs/BACKLOG.md`：待办清单（进行中 / 待办 / 已完成）；`docs/DEVLOG.md`：开发日志
 - `js/backup.js`：导出 / 导入备份（导入前严格检查，任何一处不对就整份拒绝）
 - `js/main.js` 启动；`router.js` hash 路由；`schema.js` 版本与迁移；`store.js` 数据读写；`dates.js` 日期计算；`photos.js` 照片压缩；`ai.js` 调用 AI；`incubator-logic.js` 孵化业务逻辑；`backup.js` 备份；`sample-data.js` 示例数据
 - `js/ui/`：egg、modal、toast、confirm、dom（安全建元素 el()）
@@ -44,6 +45,7 @@
   - `photo:<id>`：压缩后的 JPEG dataURL（最长边 800px，质量 0.7）
 - 所有读写只通过 js/store.js
 - 人、礼物、偏好是扁平数组，用 personId 关联；删除朋友时连带删除其礼物和照片
+- 偏好记录有两种：`type: "prefer"`（我更喜欢这个！）和 `type: "dislike"`（不喜欢）；没有 type 的旧记录当作 prefer
 - 示例数据：人和礼物带可选字段 `sample: true`（没有该字段 = 真实数据），用于一键清除；js/sample-data.js 按"今天"推算生日
 - 日期用字符串存储（YYYY-MM-DD）；生日为 { year | null, month, day }，year 为空时不显示年龄；2 月 29 日在非闰年按 2 月 28 日提醒
 - 修改数据结构：schema.js 中 CURRENT_VERSION +1，并在 migrations 中加迁移函数；不改旧字段含义
@@ -54,13 +56,16 @@
 ## 安全
 - 所有用户输入、AI 返回、导入备份中的内容，在页面上一律作为纯文本显示：用 textContent 或 js/ui/dom.js 的 el()，禁止把这些内容拼进 innerHTML / insertAdjacentHTML / 内联事件属性
 - innerHTML 只允许用于代码里写死的静态模板
+- 浏览器自带的 `append` / `replaceChildren` 会把 `null` 显示成文字 "null"；可能为空的内容要么放进 `el()`（会自动忽略），要么先 `.filter(Boolean)`
 
 ## AI
 - 所有 AI 请求只能通过 js/ai.js 的 callAI({ system, prompt, maxTokens, timeoutMs })；其他文件不得直接 fetch AI 接口
 - Anthropic Messages API，浏览器直连，需 anthropic-dangerous-direct-browser-access 请求头；默认模型 claude-sonnet-5-5
 - API 密钥只存本地 settings.apiKey
 - 只发送文字信息，绝不发送照片
-- 业务逻辑（提示词、JSON 解析、同品类匹配）放在 js/incubator-logic.js；AI 返回 JSON 格式错误时自动重试一次
+- 业务逻辑（提示词、JSON 解析、同品类匹配、灵感清单）放在 js/incubator-logic.js；AI 返回 JSON 格式错误时自动重试一次
+- 用结构化输出（output_config.format json_schema）固定 AI 的回答格式
+- **AI 不生成任何网址或链接**：购物搜索链接只由 js/shop-platforms.js 的平台模板 + 编码后的关键词拼成（平台列表在这个文件里配置）；关键词里像网址的内容会被丢掉；外链用 target="_blank" rel="noopener noreferrer"。手机上配置了 `appUrl` 的平台（淘宝、小红书）先尝试打开 App（App 地址开头必须在 shop-platforms.js 的白名单里），2 秒后还没离开页面就显示 `mobileFallback`：`web` 给网页版链接，`copy` 提示关键词已复制。App 地址来自社区整理、非官方，可能随 App 更新失效
 - 预算 P0 用预设档位：200 以下 / 200–500 / 500–1000 / 1000 以上
 
 ## 代码约定
