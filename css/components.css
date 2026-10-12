@@ -353,7 +353,9 @@ select.input { padding-right: 4px; }
 .swatch:has(input:focus-visible) { outline: 3px solid var(--color-blue); outline-offset: 3px; }
 
 /* 标签 */
-.tag-entry { display: flex; gap: 8px; }
+/* 输入框 + 按钮：空间不够时按钮换到下一行，输入框至少留 150px */
+.tag-entry { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag-entry .input { flex: 1 1 150px; min-width: 0; }
 .tag-entry .btn { flex: none; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip {
@@ -793,7 +795,8 @@ body.no-nav .page { margin-left: auto; margin-right: auto; padding-bottom: calc(
 
 /* 孵化中：蛋快速摇晃 + 光晕一明一暗 */
 .hatching { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 32px var(--gutter); }
-.hatching-egg { position: relative; display: flex; justify-content: center; margin-bottom: 8px; }
+/* 宽度只和蛋一样：后面光晕的 -40% 按蛋的宽度算，不会伸出卡片和屏幕 */
+.hatching-egg { position: relative; display: flex; justify-content: center; width: fit-content; margin: 0 auto 8px; }
 .hatching-egg::before {
   content: "";
   position: absolute;
@@ -915,11 +918,11 @@ button.shop-link { font: inherit; font-size: 13px; cursor: pointer; }
 .special-icon { position: absolute; top: -6px; right: -12px; width: 22px; height: 22px; }
 .glow-birthday .egg-name { text-shadow: 0 0 6px rgba(255, 190, 70, 0.95), 0 0 2px rgba(255, 220, 140, 1); }
 .glow-anniversary .egg-name { text-shadow: 0 0 6px rgba(110, 185, 235, 0.95), 0 0 2px rgba(190, 225, 248, 1); }
-/* 最多两行，保证"今天生日 · 还有 N 个纪念日"能完整显示 */
+/* 最多三行，320px 小屏上也能完整显示"今天生日 · 还有 N 个纪念日" */
 .special-label {
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   max-width: 100%;
   font-size: 12px;
   line-height: 1.35;

@@ -20,6 +20,8 @@ class Server(ThreadingHTTPServer):
 
 
 class NoCacheHandler(SimpleHTTPRequestHandler):
+    extensions_map = {**SimpleHTTPRequestHandler.extensions_map, ".webmanifest": "application/manifest+json"}
+
     def end_headers(self):
         self.send_header("Cache-Control", "no-store")
         super().end_headers()

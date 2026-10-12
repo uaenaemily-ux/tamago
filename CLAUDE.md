@@ -7,7 +7,7 @@
 ## 技术约束
 - 纯静态：原生 HTML/CSS/JS（ES Modules），无框架、无 npm、无构建、无后端、无数据库
 - 部署：GitHub Pages；路由使用 hash（#/home）
-- 手机优先，最小宽度 320px 不出现横向滚动
+- 手机优先，最小宽度 320px 不出现横向滚动（改界面后跑 tools/check-layout.py）；装饰光晕等伪元素的百分比尺寸要基于小元素（如蛋本身），不要基于整张卡片，否则会撑出屏幕
 - 本地预览：`python3 tools/serve.py`（禁止缓存，手机测试也能拿到最新文件），打开 http://localhost:8000；手机用电脑的局域网 IP（`ipconfig getifaddr en0`）
 - 当前范围：只做 PRD 中的 P0
 
@@ -25,6 +25,8 @@
 - `fonts/`：QiuYeYuanTi-16.ttf（原字体，只用来截取）、tamago-title.woff2（网页实际加载的截取版）、OFL.txt（授权）
 - `tools/subset-font.py`：截取标题字体；`tools/pixel-icons.py`：生成像素图标；`tools/pixelize.py`：把 AI 生成的像素风图片整理成真正的像素图
 - `tools/screenshot.py`：截图（先启动 tools/serve.py）。`python3 tools/screenshot.py "#/welcome" 输出.png` 手机 390 宽；加 `--desktop` 为电脑 1280 宽，`--full` 截整页，`--sample` 先载入示例数据（全新浏览器没有数据会跳到欢迎页）。会等页面渲染、字体和图片都加载完再截；不要用 chrome --screenshot（会截到空白或缺图，且最小宽度约 500px）
+- `tools/check-layout.py`：小屏检查，320px 下打开所有页面和弹窗，检查横向滚动并截图（`python3 tools/check-layout.py 截图文件夹`）。新增页面或弹窗时在它的 SCENARIOS 里加一项
+- `manifest.webmanifest` + `assets/icons/`（icon.svg 原图，icon-192/512、apple-touch-icon、favicon-32 由 Chrome 按 SVG 渲染）：添加到主屏幕
 - `assets/wing-left.png`、`assets/wing-right.png`：欢迎页左右两只像素翅膀（58×55、60×55），由 design-refs/wings-raw.png 经 pixelize.py（--block 12.5）整理、再用 `tools/split-wings.py` 从中间切开。欢迎页蛋和翅膀的比例都在 css/components.css 的 `.welcome-hero` 变量里（--egg-w、--wing-w-ratio、--wing-h-ratio、--wing-gap-ratio、--wing-y-ratio）
 - `assets/deco/`：装饰图（手绘 hand-*、像素 pixel-*）；`assets/nav/`：导航图标
 - `design-refs/`：美术参考图，已加入 .gitignore，不提交；只参考氛围，所有图案和插画必须原创
@@ -53,6 +55,7 @@
 - 备份文件：{ app: "tamago", backupVersion, schemaVersion, exportedAt, data, photos }，导出时不含 apiKey
 - 导入失败不得覆盖现有数据；覆盖前二次确认
 - 启动时调用 navigator.storage.persist()；设置页提示 iPhone 从主屏幕图标打开、定期导出备份
+- iPhone 上从主屏幕图标打开的版本和 Safari 里的数据是分开存的；换用主屏幕版前要先在 Safari 导出备份、再到主屏幕版导入
 
 ## 安全
 - 所有用户输入、AI 返回、导入备份中的内容，在页面上一律作为纯文本显示：用 textContent 或 js/ui/dom.js 的 el()，禁止把这些内容拼进 innerHTML / insertAdjacentHTML / 内联事件属性

@@ -4,7 +4,7 @@ import { createStore, clear } from "../js/vendor/idb-keyval.js";
 import * as dates from "../js/dates.js";
 import { migrate, createDefaultData, CURRENT_VERSION } from "../js/schema.js";
 import * as store from "../js/store.js";
-import { isPhotoDataUrl } from "../js/photos.js";
+import { isPhotoDataUrl, compressImage } from "../js/photos.js";
 import { buildSampleData } from "../js/sample-data.js";
 import { createBackup, parseBackup, importBackup, backupFileName } from "../js/backup.js";
 import { callAI } from "../js/ai.js";
@@ -668,6 +668,27 @@ group("偏好记录（更喜欢 / 不喜欢）", () => {
 
 // ---------------- 照片 ----------------
 group("照片（photos.js）", () => {
+  test("照片过大：4000×3000 的图压缩到最长边 800，文件变小", async () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 4000;
+    canvas.height = 3000;
+    const ctx = canvas.getContext("2d");
+    // 画一些渐变和噪点，接近真实照片
+    const g = ctx.createLinearGradient(0, 0, 4000, 3000);
+    g.addColorStop(0, "#F7B8CB"); g.addColorStop(1, "#C9E6F7");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, 4000, 3000);
+    for (let i = 0; i < 4000; i++) { ctx.fillStyle = `hsl(${i % 360},70%,60%)`; ctx.fillRect((i * 97) % 4000, (i * 61) % 3000, 40, 40); }
+    const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
+    const dataUrl = await compressImage(new File([blob], "big.png", { type: "image/png" }));
+    const img = await new Promise((r) => { const i = new Image(); i.onload = () => r(i); i.src = dataUrl; });
+    const kb = Math.round((dataUrl.length * 0.75) / 1024);
+    equal([img.naturalWidth, img.naturalHeight, dataUrl.startsWith("data:image/jpeg"), kb < 200], [800, 600, true, true]);
+  });
+
+  test("不是图片的文件 → 提示请选择图片", async () => {
+    await throws(() => compressImage(new File(["hello"], "a.txt", { type: "text/plain" })), "图片");
+  });
+
   test("只接受图片 dataURL", () => {
     equal([
       isPhotoDataUrl("data:image/jpeg;base64,AAAA"),
