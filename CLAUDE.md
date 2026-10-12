@@ -1,5 +1,7 @@
 # tamago
 
+> **始终用中文回复我，包括解释、计划和总结；代码、文件名和命令保持原样。**
+
 送礼灵感与生日提醒的个人网页工具。需求见 docs/PRD.md。用户是编程新手：解释要通俗，改动要小步、可在手机上验证。
 
 ## 技术约束
@@ -19,7 +21,9 @@
 - `js/vendor/idb-keyval.js`：本地保存的第三方库（6.2.1，Apache-2.0，授权见同目录 LICENSE），不走 CDN
 - `tests/`：浏览器测试页，打开 http://localhost:8000/tests/ 自动运行；使用单独的测试数据库 "tamago-test"，不碰真实数据。修改 dates / schema / store 后要补测试并全部通过
 - `fonts/`：QiuYeYuanTi-16.ttf（原字体，只用来截取）、tamago-title.woff2（网页实际加载的截取版）、OFL.txt（授权）
-- `tools/subset-font.py`：截取标题字体；`tools/pixel-icons.py`：生成像素图标
+- `tools/subset-font.py`：截取标题字体；`tools/pixel-icons.py`：生成像素图标；`tools/pixelize.py`：把 AI 生成的像素风图片整理成真正的像素图
+- `tools/screenshot.py`：截图（先启动 tools/serve.py）。`python3 tools/screenshot.py "#/welcome" 输出.png` 手机 390 宽；加 `--desktop` 为电脑 1280 宽，`--full` 截整页。会等页面渲染、字体和图片都加载完再截；不要用 chrome --screenshot（会截到空白或缺图，且最小宽度约 500px）
+- `assets/wing-left.png`、`assets/wing-right.png`：欢迎页左右两只像素翅膀（58×55、60×55），由 design-refs/wings-raw.png 经 pixelize.py（--block 12.5）整理、再用 `tools/split-wings.py` 从中间切开。欢迎页蛋和翅膀的比例都在 css/components.css 的 `.welcome-hero` 变量里（--egg-w、--wing-w-ratio、--wing-h-ratio、--wing-gap-ratio、--wing-y-ratio）
 - `assets/deco/`：装饰图（手绘 hand-*、像素 pixel-*）；`assets/nav/`：导航图标
 - `design-refs/`：美术参考图，已加入 .gitignore，不提交；只参考氛围，所有图案和插画必须原创
 
@@ -39,6 +43,7 @@
   - `photo:<id>`：压缩后的 JPEG dataURL（最长边 800px，质量 0.7）
 - 所有读写只通过 js/store.js
 - 人、礼物、偏好是扁平数组，用 personId 关联；删除朋友时连带删除其礼物和照片
+- 示例数据：人和礼物带可选字段 `sample: true`（没有该字段 = 真实数据），用于一键清除；js/sample-data.js 按"今天"推算生日
 - 日期用字符串存储（YYYY-MM-DD）；生日为 { year | null, month, day }，year 为空时不显示年龄；2 月 29 日在非闰年按 2 月 28 日提醒
 - 修改数据结构：schema.js 中 CURRENT_VERSION +1，并在 migrations 中加迁移函数；不改旧字段含义
 - 备份文件：{ app: "tamago", backupVersion, schemaVersion, exportedAt, data, photos }，导出时不含 apiKey
@@ -67,10 +72,12 @@
 - 卡片：白底、2px 粉色虚线边框、大圆角、偏移实色粉影（像贴纸）
 - 配色：主色粉（--color-pink-*），点缀 baby blue / 奶黄 / 薄荷 / 薰衣草；文字用暖深色 --color-text
 - 装饰两种都用，稀疏点缀、多留白：
-  - 手绘线条（带轻微抖动的蜡笔感）：assets/deco/hand-*.svg（闪光星星、天使翅膀）
+  - 手绘线条（带轻微抖动的蜡笔感）：assets/deco/hand-*.svg（闪光星星）
+  - 天使翅膀：柔和像素风 assets/deco/pixel-angel-wing.svg（白色羽毛、淡粉紫边缘、无深色描边、根部小卷），显示尺寸用像素图的整数倍；页面标题两侧的小翅膀是 pixel-wing.svg
   - 像素小图标：assets/deco/pixel-*.svg（爱心、星星、天使翅膀），导航图标 assets/nav/*.svg
   - 用法：`<span class="deco deco-heart">`；页面标题 .page-title 两侧自动加像素翅膀；.card-sparkles 给卡片角落加手绘闪光
 - 像素图标由 `python3 tools/pixel-icons.py` 从字符画生成；新增图标改脚本里的字符画再运行
+- 像素图（PNG + `image-rendering: pixelated`）的位置和尺寸必须是整像素（用 CSS `round(…, 1px)`），它上方元素的高度也要是整数；做动画时把像素图放进一个容器，只对容器做 transform 动画并加 `will-change: transform`（浏览器整体平移画好的图，不逐帧重新取样），这样既平滑又不抖。不要直接对像素图元素做平滑动画（线条会抖，电脑屏幕最明显），也不要用 `steps()`（会卡顿）
 - 原创性：design-refs/ 只参考氛围。不得使用原作角色、扑克牌花色加黑色腰带的蛋纹、问号蛋 / X 蛋、锁和钥匙道具，也不得使用三丽鸥等现成角色
 - 界面文字以中文为主
 

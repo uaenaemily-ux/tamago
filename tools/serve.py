@@ -13,6 +13,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 
+class Server(ThreadingHTTPServer):
+    # 默认只排队 5 个连接；浏览器打开页面时会同时请求 30 多个文件，排队太短可能丢请求
+    request_queue_size = 64
+    daemon_threads = True
+
+
 class NoCacheHandler(SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header("Cache-Control", "no-store")
@@ -22,7 +28,7 @@ class NoCacheHandler(SimpleHTTPRequestHandler):
 def main():
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
     handler = partial(NoCacheHandler, directory=str(ROOT))
-    server = ThreadingHTTPServer(("0.0.0.0", port), handler)
+    server = Server(("0.0.0.0", port), handler)
     print(f"预览地址：http://localhost:{port}（按 Ctrl+C 停止）")
     server.serve_forever()
 

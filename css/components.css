@@ -65,7 +65,8 @@
 .deco-star    { --deco: url("../assets/deco/pixel-star.svg"); }
 .deco-gift    { --deco: url("../assets/deco/pixel-gift.svg"); }
 .deco-sparkle { --deco: url("../assets/deco/hand-sparkle.svg"); width: 28px; height: 28px; }
-.deco-wing    { --deco: url("../assets/deco/hand-wing.svg"); width: 48px; height: 38px; }
+/* 柔和像素天使翅膀（30×23 像素图），尺寸用整数倍：2 倍 */
+.deco-wing    { --deco: url("../assets/deco/pixel-angel-wing.svg"); width: 60px; height: 46px; }
 .deco-wing-left { transform: scaleX(-1); }
 
 /* 天使翅膀 + 中间内容的组合（用于空状态等） */
@@ -117,6 +118,13 @@
 .egg-dots { fill: color-mix(in srgb, var(--egg) 70%, var(--color-text)); }
 .egg-shine { fill: rgba(255, 255, 255, 0.65); }
 .egg-sparkle { fill: #FFFFFF; }
+
+/* 空白蛋（欢迎页，还没有主人）：白色蛋身，细节换成淡粉，否则白上加白看不见 */
+.egg-blank .egg-outline { stroke: var(--color-pink-200); }
+.egg-blank .egg-lace { fill: var(--color-pink-100); }
+.egg-blank .egg-dots { fill: var(--color-pink-200); }
+.egg-blank .egg-shine { fill: var(--color-pink-50); }
+.egg-blank .egg-sparkle { fill: var(--color-pink-200); }
 
 /* ---------- 目录：蛋的网格 ---------- */
 .section-title { display: flex; align-items: center; gap: 6px; }
@@ -600,3 +608,141 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.5; }
   text-decoration: none;
 }
 .next-birthday .egg { flex: none; }
+
+/* ---------- 欢迎页 ---------- */
+body.no-nav .nav { display: none; }
+body.no-nav .page { margin-left: auto; margin-right: auto; padding-bottom: calc(var(--gutter) * 2 + env(safe-area-inset-bottom)); }
+.welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 400px;
+  margin: 0 auto;
+  padding-top: 24px;
+  text-align: center;
+}
+/* 高度取整：logo 是 640×218，按宽度缩放会得到 88.56px 这种小数高度，
+   把下面的蛋和翅膀推到半个像素上，像素图会发虚、动起来会抖 */
+.welcome-logo { width: auto; height: round(calc(min(260px, 72vw) * 218 / 640), 1px); }
+/* 欢迎页：白蛋 + 左右两只像素翅膀。所有尺寸以蛋为基准，改下面的变量即可微调 */
+.welcome-hero {
+  --egg-w: 140px;             /* 蛋的宽度（基准） */
+  --egg-h: round(calc(var(--egg-w) * 1.2), 1px);   /* 蛋的高度（蛋形固定是宽的 1.2 倍） */
+  --wing-w-ratio: 0.5;        /* 每只翅膀最大宽度 = 蛋宽 × 0.5 */
+  --wing-h-ratio: 0.33;       /* 每只翅膀最大高度 = 蛋高 × 0.33 */
+  --wing-gap-ratio: 0.08;     /* 翅膀根部和蛋之间的空隙 = 蛋宽 × 0.08 */
+  --wing-y-ratio: 0.45;       /* 翅膀垂直中心 = 蛋高 × 0.45（翅膀大约落在蛋高 30%–60% 之间） */
+
+  /* 所有算出来的尺寸都取整到整像素：像素图落在半个像素上会发虚、动起来会抖 */
+  --wing-w: round(calc(var(--egg-w) * var(--wing-w-ratio)), 1px);
+  --wing-h: round(calc(var(--egg-h) * var(--wing-h-ratio)), 1px);
+  --wing-gap: round(calc(var(--egg-w) * var(--wing-gap-ratio)), 1px);
+  --wing-top: round(calc(var(--egg-h) * var(--wing-y-ratio) - var(--wing-h) / 2), 1px);
+
+  position: relative;
+  /* 整体宽度 = 蛋 + 两边（空隙 + 翅膀）≈ 蛋宽 × 2.16 */
+  width: calc(var(--egg-w) + 2 * (var(--wing-gap) + var(--wing-w)));   /* 各项都是整数，总宽也是整数 */
+  max-width: 100%;
+  height: var(--egg-h);
+  margin: 20px auto 24px;
+}
+/* 320px 宽的小屏幕放不下，整体缩小一点 */
+@media (max-width: 340px) {
+  .welcome-hero { --egg-w: 124px; }
+}
+/* 蛋后面的柔和光晕 */
+.welcome-hero::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--egg-w) * 1.8);
+  height: calc(var(--egg-h) * 1.4);
+  translate: -50% -50%;
+  background: radial-gradient(closest-side, rgba(247, 184, 203, 0.45), rgba(247, 184, 203, 0));
+  pointer-events: none;
+}
+.welcome-hero .egg {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  top: 0;
+  width: var(--egg-w);
+  height: var(--egg-h);
+  translate: -50% 0;
+}
+/* 翅膀：在 --wing-w × --wing-h 的框里按原比例缩放（不变形），根部一侧贴着框的内边，
+   框和蛋之间留 --wing-gap。默认尺寸下翅膀接近原始像素大小（约 1 倍），像素清晰 */
+.wing {
+  position: absolute;
+  top: var(--wing-top);
+  width: var(--wing-w);
+  height: var(--wing-h);
+  background-repeat: no-repeat;
+  background-size: contain;
+  image-rendering: pixelated;          /* 缩放时保持像素清晰，不模糊 */
+}
+.wing-left {
+  right: calc(50% + var(--egg-w) / 2 + var(--wing-gap));
+  background-image: url("../assets/wing-left.png");
+  background-position: right center;
+}
+.wing-right {
+  left: calc(50% + var(--egg-w) / 2 + var(--wing-gap));
+  background-image: url("../assets/wing-right.png");
+  background-position: left center;
+}
+/* 蛋和翅膀一起轻轻上下浮动（平滑）。
+   只对外层容器做动画，并加 will-change：浏览器把蛋和翅膀在整像素位置画好一次，
+   再整体平移这张画好的图，不会每一帧重新取样像素图，所以线条不抖、动作也顺滑。
+   注意：里面元素的静止位置必须是整像素（见上面的 round）。 */
+.welcome-float {
+  position: absolute;
+  inset: 0;
+  animation: soft-float 3.2s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes soft-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .welcome-float { animation: none; }
+}
+.welcome-tagline {
+  margin: 4px 0 16px;
+  font-family: var(--font-title);
+  font-synthesis: none;
+  font-size: var(--text-title-md);
+  color: var(--color-pink-700);
+}
+.welcome-points {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin: 0 0 24px;
+  padding: 16px;
+  border: var(--border-dashed);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  list-style: none;
+  text-align: left;
+}
+.welcome-points li { display: flex; align-items: center; gap: 10px; }
+.welcome-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.btn-wide { width: 100%; min-height: 48px; }
+.link-button {
+  align-self: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border: none;
+  background: none;
+  color: var(--color-text-soft);
+  font: inherit;
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.welcome-note { margin-top: 16px; }

@@ -1,27 +1,39 @@
 // 启动入口：读取本地数据 → 申请持久存储 → 启动页面路由
 import { startRouter } from "./router.js";
-import { loadState, requestPersistentStorage } from "./store.js";
+import { loadState, requestPersistentStorage, updateSettings } from "./store.js";
 import { el } from "./ui/dom.js";
 import * as home from "./pages/home.js";
 import * as directory from "./pages/directory.js";
 import * as settings from "./pages/settings.js";
 import * as detail from "./pages/detail.js";
+import * as welcome from "./pages/welcome.js";
 
 const routes = {
   "home": home,
   "directory": directory,
   "settings": settings,
   "person/:id": detail,
+  "welcome": welcome,
 };
 
 const container = document.getElementById("page");
 
 async function start() {
+  let state;
   try {
-    await loadState();
+    state = await loadState();
   } catch (err) {
     showStartupError(err);
     return;
+  }
+
+  // 第一次打开：显示欢迎页。已经有数据的（欢迎页上线前登记的）直接算看过
+  if (!state.settings.onboarded) {
+    if (state.people.length) {
+      await updateSettings({ onboarded: true }).catch(() => {});
+    } else {
+      location.hash = "#/welcome";
+    }
   }
 
   // 不用等结果，页面先显示

@@ -25,8 +25,9 @@ export function startRouter(routes, container, fallback = "home") {
     container.replaceChildren();
     if (!isSamePage) window.scrollTo(0, 0); // 刷新同一页时保持滚动位置
     match.page.render(container, match.params);
-    // 页面可以用 navSection 指定高亮哪个导航（如详情页高亮"目录"）
+    // 页面可以用 navSection 指定高亮哪个导航（如详情页高亮"目录"），用 hideNav 隐藏导航（如欢迎页）
     highlightNav(match.page.navSection || path.split("/")[0]);
+    document.body.classList.toggle("no-nav", Boolean(match.page.hideNav));
   }
 
   let currentPath = null;

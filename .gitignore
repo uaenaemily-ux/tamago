@@ -6,3 +6,6 @@
 
 # 美术参考图：仅本地参考，不提交
 design-refs/
+
+# Python 缓存
+__pycache__/

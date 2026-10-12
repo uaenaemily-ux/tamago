@@ -5,6 +5,7 @@ import * as dates from "../js/dates.js";
 import { migrate, createDefaultData, CURRENT_VERSION } from "../js/schema.js";
 import * as store from "../js/store.js";
 import { isPhotoDataUrl } from "../js/photos.js";
+import { buildSampleData } from "../js/sample-data.js";
 
 const TEST_DB = "tamago-test";
 const groups = [];
@@ -279,6 +280,35 @@ group("数据存取（store.js，使用测试数据库）", () => {
     await store.deletePerson(personId);
     equal([store.getState().people.length, store.getState().gifts.length, await store.getPhoto(photoId)],
       [0, 0, null]);
+  });
+
+  test("示例数据：生日按今天推算（今天、2 天后、12 天后、60 天后）", () => {
+    const { people } = buildSampleData(TODAY);
+    equal(people.map((p) => dates.nextBirthday(p.birthday, TODAY).daysUntil), [0, 2, 12, 60]);
+  });
+
+  test("示例数据：年龄正确，礼物日期都不晚于今天", () => {
+    const { people, gifts } = buildSampleData(TODAY);
+    equal(dates.nextBirthday(people[0].birthday, TODAY).turningAge, 25);
+    const late = gifts.filter((g) => g.date > dates.todayISO(TODAY));
+    equal(late, []);
+  });
+
+  test("载入示例：人和礼物都标记 sample，并算作看过欢迎页", async () => {
+    await store.addPerson({ name: "真朋友", category: "friend", birthday: { year: null, month: 5, day: 1 } });
+    const result = await store.loadSampleData(buildSampleData());
+    const s = store.getState();
+    equal([result.people, s.people.filter((p) => p.sample).length, s.gifts.every((g) => g.sample),
+      s.settings.onboarded, store.hasSampleData()], [4, 4, true, true, true]);
+  });
+
+  test("清除示例：只删示例，真实数据保留", async () => {
+    const real = store.getState().people.find((p) => !p.sample);
+    await store.addGift({ personId: real.id, name: "真礼物" });
+    await store.clearSampleData();
+    const s = store.getState();
+    equal([s.people.map((p) => p.name), s.gifts.map((g) => g.name), store.hasSampleData()],
+      [["真朋友"], ["真礼物"], false]);
   });
 
   test("持久存储申请有结果", async () => {

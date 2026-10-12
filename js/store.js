@@ -200,10 +200,10 @@ function unique(values) {
   return [...new Set(values.filter(Boolean))];
 }
 
-function cleanGift(fields) {
+function cleanGift(fields, people = state.people) {
   const name = String(fields.name ?? "").trim();
   if (!name) throw new Error("请填写礼物名称");
-  if (!getPerson(fields.personId)) throw new Error("找不到这个人");
+  if (!people.some((p) => p.id === fields.personId)) throw new Error("找不到这个人");
 
   const date = fields.date || "";
   if (date && !parseISODate(date)) throw new Error("日期格式不对");
@@ -249,6 +249,54 @@ export async function addPreference({ personId, chosen, rejected }) {
   const pref = { id: newId("pref"), personId, chosen, rejected, createdAt: now() };
   await commit({ ...state, preferences: [...state.preferences, pref] });
   return pref;
+}
+
+// ---------- 示例数据 ----------
+// 示例的人和礼物带 sample: true，方便以后一键清除。
+
+// 一次性载入示例：{ people: [{ key, ...朋友信息 }], gifts: [{ personKey, ...礼物信息 }] }
+export async function loadSampleData({ people, gifts }) {
+  const stamp = now();
+  const idByKey = {};
+  const newPeople = people.map(({ key, ...fields }) => {
+    const id = newId("p");
+    idByKey[key] = id;
+    return { id, ...cleanPerson(fields), sample: true, createdAt: stamp, updatedAt: stamp };
+  });
+  const allPeople = [...state.people, ...newPeople];
+  const newGifts = gifts.map(({ personKey, ...fields }) => ({
+    id: newId("g"),
+    ...cleanGift({ ...fields, personId: idByKey[personKey] }, allPeople),
+    sample: true,
+    createdAt: stamp,
+  }));
+
+  await commit({
+    ...state,
+    settings: { ...state.settings, onboarded: true },
+    people: allPeople,
+    gifts: [...state.gifts, ...newGifts],
+  });
+  return { people: newPeople.length, gifts: newGifts.length };
+}
+
+export function hasSampleData() {
+  return state.people.some((p) => p.sample) || state.gifts.some((g) => g.sample);
+}
+
+// 清除所有示例：示例的人（连同 TA 名下的所有礼物和照片）+ 示例礼物
+export async function clearSampleData() {
+  const removedIds = new Set(state.people.filter((p) => p.sample).map((p) => p.id));
+  const isRemovedGift = (g) => g.sample || removedIds.has(g.personId);
+  const photoIds = state.gifts.filter(isRemovedGift).map((g) => g.photoId).filter(Boolean);
+
+  await commit({
+    ...state,
+    people: state.people.filter((p) => !removedIds.has(p.id)),
+    gifts: state.gifts.filter((g) => !isRemovedGift(g)),
+    preferences: state.preferences.filter((p) => !removedIds.has(p.personId)),
+  });
+  if (photoIds.length) await delMany(photoIds.map(photoKey), db).catch(() => {});
 }
 
 // ---------- 照片 ----------
