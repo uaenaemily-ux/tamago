@@ -10,7 +10,7 @@ export function confirmDialog({ title, message, confirmText = "确定", cancelTe
 
     const modal = openModal({
       title,
-      body: el("p", {}, message),
+      body: el("p", { class: "confirm-message" }, message),
       footer: [cancel, ok],
       onClose: () => resolve(result),
     });

@@ -6,6 +6,7 @@ import { migrate, createDefaultData, CURRENT_VERSION } from "../js/schema.js";
 import * as store from "../js/store.js";
 import { isPhotoDataUrl } from "../js/photos.js";
 import { buildSampleData } from "../js/sample-data.js";
+import { createBackup, parseBackup, importBackup, backupFileName } from "../js/backup.js";
 
 const TEST_DB = "tamago-test";
 const groups = [];
@@ -314,6 +315,72 @@ group("数据存取（store.js，使用测试数据库）", () => {
   test("持久存储申请有结果", async () => {
     const status = await store.requestPersistentStorage();
     if (!["granted", "denied", "unsupported"].includes(status)) throw new Error(status);
+  });
+});
+
+// ---------------- 备份 ----------------
+group("备份（backup.js，使用测试数据库）", () => {
+  test("导出：不包含 API 密钥，包含照片", async () => {
+    await store.updateSettings({ apiKey: "sk-ant-SECRET" });
+    const personId = store.getState().people[0].id;
+    const photoId = await store.savePhoto("data:image/jpeg;base64,PHOTO");
+    await store.addGift({ personId, name: "有照片的礼物", photoId });
+    const backup = await createBackup();
+    const text = JSON.stringify(backup);
+    equal([text.includes("SECRET"), backup.app, backup.photos[photoId]],
+      [false, "tamago", "data:image/jpeg;base64,PHOTO"]);
+  });
+
+  test("导出再读回：人数、礼物数、照片数一致", async () => {
+    const s = store.getState();
+    const parsed = parseBackup(JSON.stringify(await createBackup()));
+    equal([parsed.summary.people, parsed.summary.gifts, parsed.summary.photos],
+      [s.people.length, s.gifts.length, 1]);
+  });
+
+  test("文件名带日期", () => {
+    equal(backupFileName(TODAY), "tamago-backup-2026-10-11.json");
+  });
+
+  test("不是 JSON、不是 tamago、版本太新 → 拒绝", async () => {
+    await throws(() => parseBackup("hello"), "无法识别");
+    await throws(() => parseBackup(JSON.stringify({ app: "other", backupVersion: 1, data: {} })), "无法识别");
+    await throws(() => parseBackup(JSON.stringify({ app: "tamago", backupVersion: 99, data: {} })), "更新版本");
+  });
+
+  test("内容损坏（礼物找不到人、生日不对）→ 整份拒绝", async () => {
+    const good = await createBackup();
+    const badGift = structuredClone(good);
+    badGift.data.gifts[0].personId = "p_不存在";
+    await throws(() => parseBackup(JSON.stringify(badGift)), "找不到对应的人");
+    const badBirthday = structuredClone(good);
+    badBirthday.data.people[0].birthday = { month: 13, day: 1 };
+    await throws(() => parseBackup(JSON.stringify(badBirthday)), "生日");
+  });
+
+  test("照片不是图片 → 去掉照片，礼物保留", async () => {
+    const backup = await createBackup();
+    const [id] = Object.keys(backup.photos);
+    backup.photos[id] = "javascript:alert(1)";
+    const parsed = parseBackup(JSON.stringify(backup));
+    equal([parsed.summary.missingPhotos, parsed.data.gifts.some((g) => g.photoId === id)], [1, false]);
+  });
+
+  test("导入：替换全部数据，保留本机密钥，忽略文件里的密钥，清掉用不到的旧照片", async () => {
+    const backup = await createBackup();
+    backup.data.settings.apiKey = "sk-ant-FROM-FILE";
+    backup.data.people = backup.data.people.slice(0, 1);
+    backup.data.gifts = backup.data.gifts.filter((g) => g.personId === backup.data.people[0].id && !g.photoId);
+    const orphanPhoto = await store.savePhoto("data:image/jpeg;base64,ORPHAN");
+    await importBackup(parseBackup(JSON.stringify(backup)));
+    const s = store.getState();
+    equal([s.people.length, s.settings.apiKey, await store.getPhoto(orphanPhoto)], [1, "sk-ant-SECRET", null]);
+  });
+
+  test("导入后重新读取，数据还在", async () => {
+    const before = store.getState().people.map((p) => p.name);
+    const s = await store.loadState();
+    equal(s.people.map((p) => p.name), before);
   });
 });
 

@@ -4,6 +4,7 @@
     python3 tools/screenshot.py "#/welcome" 输出.png              # 手机宽度：390×844，2 倍清晰度
     python3 tools/screenshot.py "#/welcome" 输出.png --desktop    # 电脑宽度：1280×900
     python3 tools/screenshot.py "#/home" 输出.png --full          # 截整页（不只是第一屏）
+    python3 tools/screenshot.py "#/settings" 输出.png --sample    # 先载入示例数据再截（全新浏览器没有数据，会跳到欢迎页）
 
 为什么不直接用 chrome --screenshot：
 - 它在页面 load 事件时就截图，这时本网页可能还在读 IndexedDB、图片还没加载，截出来是空白或缺图
@@ -110,10 +111,11 @@ class Page:
         return result.get("result", {}).get("value")
 
 
-# 页面是否"真正画完"：路由已渲染内容、字体加载完、所有 <img> 加载完
+# 页面是否"真正画完"：已渲染内容、字体加载完、所有 <img> 加载完
 READY_JS = """
 (async () => {
-  const page = document.getElementById('page');
+  // 网页主体用 #page；测试页等其他页面没有 #page，就看 body
+  const page = document.getElementById('page') || document.body;
   if (!page || !page.children.length) return false;
   if (document.fonts.status !== 'loaded') return false;
   if ([...document.images].some((img) => !img.complete)) return false;
@@ -144,6 +146,7 @@ def main():
     ap.add_argument("output")
     ap.add_argument("--desktop", action="store_true", help="电脑宽度 1280×900（默认手机 390×844）")
     ap.add_argument("--full", action="store_true", help="截整页")
+    ap.add_argument("--sample", action="store_true", help="先载入示例数据")
     args = ap.parse_args()
 
     width, height, scale, mobile = (1280, 900, 1, False) if args.desktop else (390, 844, 2, True)
@@ -168,6 +171,19 @@ def main():
         page.call("Emulation.setDeviceMetricsOverride",
                   width=width, height=height, deviceScaleFactor=scale, mobile=mobile)
         page.call("Page.enable")
+        if args.sample:
+            # 先打开网页、用网页自己的代码载入示例数据，再去目标页面
+            page.call("Page.navigate", url=BASE_URL + "#/welcome")
+            wait_until_ready(page)
+            page.evaluate("""(async () => {
+              const store = await import('/js/store.js');
+              const { buildSampleData } = await import('/js/sample-data.js');
+              await store.loadSampleData(buildSampleData());
+              return true;
+            })()""")
+            # 先离开网页，再完整打开目标页面，让网页重新读取数据。
+            # （不能只改 # 后面的地址再刷新：刷新可能抢在跳转之前执行，结果刷新的还是欢迎页）
+            page.call("Page.navigate", url="about:blank")
         page.call("Page.navigate", url=BASE_URL + args.route)
         if not wait_until_ready(page):
             # 偶尔有文件没加载到导致页面空白：重新加载一次再等
@@ -178,9 +194,11 @@ def main():
 
         params = {"format": "png"}
         if args.full:
+            # 把"屏幕"拉到和页面一样高再截：固定在底部的导航会落在最底下，不会盖住中间内容
             content_height = page.evaluate("document.documentElement.scrollHeight")
-            params["clip"] = {"x": 0, "y": 0, "width": width, "height": content_height, "scale": 1}
-            params["captureBeyondViewport"] = True
+            page.call("Emulation.setDeviceMetricsOverride",
+                      width=width, height=content_height, deviceScaleFactor=scale, mobile=mobile)
+            time.sleep(0.5)
         shot = page.call("Page.captureScreenshot", **params)
         with open(args.output, "wb") as f:
             f.write(base64.b64decode(shot["data"]))

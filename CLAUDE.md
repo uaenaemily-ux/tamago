@@ -14,6 +14,7 @@
 ## 文件结构
 - `index.html`：唯一的 HTML（底部导航 + 页面容器 + 弹窗容器）；`manifest.webmanifest`：添加到主屏幕
 - `css/`：tokens.css（设计变量）、base.css、components.css
+- `js/backup.js`：导出 / 导入备份（导入前严格检查，任何一处不对就整份拒绝）
 - `js/main.js` 启动；`router.js` hash 路由；`schema.js` 版本与迁移；`store.js` 数据读写；`dates.js` 日期计算；`photos.js` 照片压缩；`ai.js` 调用 AI；`incubator-logic.js` 孵化业务逻辑；`backup.js` 备份；`sample-data.js` 示例数据
 - `js/ui/`：egg、modal、toast、confirm、dom（安全建元素 el()）
 - `js/pages/`：welcome、home、directory、detail、incubator、settings
@@ -22,7 +23,7 @@
 - `tests/`：浏览器测试页，打开 http://localhost:8000/tests/ 自动运行；使用单独的测试数据库 "tamago-test"，不碰真实数据。修改 dates / schema / store 后要补测试并全部通过
 - `fonts/`：QiuYeYuanTi-16.ttf（原字体，只用来截取）、tamago-title.woff2（网页实际加载的截取版）、OFL.txt（授权）
 - `tools/subset-font.py`：截取标题字体；`tools/pixel-icons.py`：生成像素图标；`tools/pixelize.py`：把 AI 生成的像素风图片整理成真正的像素图
-- `tools/screenshot.py`：截图（先启动 tools/serve.py）。`python3 tools/screenshot.py "#/welcome" 输出.png` 手机 390 宽；加 `--desktop` 为电脑 1280 宽，`--full` 截整页。会等页面渲染、字体和图片都加载完再截；不要用 chrome --screenshot（会截到空白或缺图，且最小宽度约 500px）
+- `tools/screenshot.py`：截图（先启动 tools/serve.py）。`python3 tools/screenshot.py "#/welcome" 输出.png` 手机 390 宽；加 `--desktop` 为电脑 1280 宽，`--full` 截整页，`--sample` 先载入示例数据（全新浏览器没有数据会跳到欢迎页）。会等页面渲染、字体和图片都加载完再截；不要用 chrome --screenshot（会截到空白或缺图，且最小宽度约 500px）
 - `assets/wing-left.png`、`assets/wing-right.png`：欢迎页左右两只像素翅膀（58×55、60×55），由 design-refs/wings-raw.png 经 pixelize.py（--block 12.5）整理、再用 `tools/split-wings.py` 从中间切开。欢迎页蛋和翅膀的比例都在 css/components.css 的 `.welcome-hero` 变量里（--egg-w、--wing-w-ratio、--wing-h-ratio、--wing-gap-ratio、--wing-y-ratio）
 - `assets/deco/`：装饰图（手绘 hand-*、像素 pixel-*）；`assets/nav/`：导航图标
 - `design-refs/`：美术参考图，已加入 .gitignore，不提交；只参考氛围，所有图案和插画必须原创

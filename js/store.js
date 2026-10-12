@@ -7,8 +7,8 @@
 // 写入方式：先生成新数据 → 存进 IndexedDB → 成功后才替换内存里的数据。
 // 这样存储失败（比如空间满了）时，页面上的数据不会和本地存的不一致。
 
-import { createStore, get, set, del, delMany } from "./vendor/idb-keyval.js";
-import { createDefaultData, migrate, CATEGORIES, EGG_COLORS, GIFT_CATEGORIES, OCCASIONS } from "./schema.js";
+import { createStore, get, set, del, delMany, getMany, setMany, keys } from "./vendor/idb-keyval.js";
+import { createDefaultData, createDefaultSettings, migrate, CATEGORIES, EGG_COLORS, GIFT_CATEGORIES, OCCASIONS } from "./schema.js";
 import { validateBirthday, parseISODate } from "./dates.js";
 
 const DATA_KEY = "tamago:data";
@@ -90,6 +90,25 @@ export async function requestPersistentStorage() {
 
 export function getPersistStatus() {
   return persistStatus;
+}
+
+// 只查询、不申请：现在是否已经是持久存储
+export async function checkPersisted() {
+  try {
+    return navigator.storage?.persisted ? await navigator.storage.persisted() : null;
+  } catch {
+    return null;
+  }
+}
+
+// 本网站大约用了多少存储空间（字节）；浏览器不支持时返回 null
+export async function estimateUsage() {
+  try {
+    const { usage, quota } = await navigator.storage.estimate();
+    return { usage, quota };
+  } catch {
+    return null;
+  }
 }
 
 // ---------- 设置 ----------
@@ -320,6 +339,43 @@ export async function getPhoto(id) {
 
 export async function deletePhoto(id) {
   await del(photoKey(id), db);
+}
+
+// 一次读出多张照片：{ id: dataUrl }（读不到的跳过）
+export async function getPhotosByIds(ids) {
+  const unique = [...new Set(ids)];
+  const values = await getMany(unique.map(photoKey), db);
+  const result = {};
+  unique.forEach((id, i) => {
+    if (values[i]) result[id] = values[i];
+  });
+  return result;
+}
+
+// ---------- 导入备份：替换全部数据 ----------
+
+// data 和 photos 必须已经由 backup.js 检查过。
+// 主数据和照片在同一个事务里写入：要么全部成功，要么什么都不变。
+// 本机的 API 密钥保留，不会被备份覆盖。
+export async function replaceAllData(data, photos) {
+  const defined = Object.fromEntries(Object.entries(data.settings || {}).filter(([, v]) => v !== undefined));
+  const next = {
+    ...data,
+    settings: { ...createDefaultSettings(), ...defined, apiKey: state.settings.apiKey },
+  };
+  if (!defined.model) next.settings.model = state.settings.model;
+
+  const oldPhotoKeys = (await keys(db)).filter((k) => typeof k === "string" && k.startsWith(PHOTO_PREFIX));
+  try {
+    await setMany([[DATA_KEY, next], ...Object.entries(photos).map(([id, url]) => [photoKey(id), url])], db);
+  } catch (err) {
+    throw toStorageError(err);
+  }
+  state = next;
+
+  // 删掉旧的、新数据用不到的照片
+  const stale = oldPhotoKeys.filter((k) => !(k.slice(PHOTO_PREFIX.length) in photos));
+  if (stale.length) await delMany(stale, db).catch(() => {});
 }
 
 // ---------- 测试用 ----------

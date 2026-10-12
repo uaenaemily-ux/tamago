@@ -746,3 +746,15 @@ body.no-nav .page { margin-left: auto; margin-right: auto; padding-bottom: calc(
   cursor: pointer;
 }
 .welcome-note { margin-top: 16px; }
+
+/* ---------- 设置页 ---------- */
+.tips {
+  margin: 8px 0;
+  padding-left: 20px;
+  color: var(--color-text-soft);
+  font-size: 14px;
+}
+.tips li + li { margin-top: 4px; }
+.tips strong { color: var(--color-text); font-weight: 600; }
+.card-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.confirm-message { white-space: pre-line; }
