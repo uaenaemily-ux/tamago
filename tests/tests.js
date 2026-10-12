@@ -178,6 +178,40 @@ group("首页生日（dates.js）", () => {
   });
 });
 
+group("特殊日子（dates.js specialDaysOn）", () => {
+  const P = (birthday, anniversaries = []) => ({ name: "A", birthday, anniversaries });
+  const bd = (month, day, year = null) => ({ year, month, day });
+
+  test("没有特殊日子 → 空列表", () => {
+    equal(dates.specialDaysOn(P(bd(1, 1)), TODAY), []);
+  });
+
+  test("今天生日：返回生日和满几岁", () => {
+    equal(dates.specialDaysOn(P(bd(10, 11, 2000)), TODAY), [{ type: "birthday", turningAge: 26 }]);
+  });
+
+  test("今天纪念日：返回名称和第几年；不知道年份时为 null", () => {
+    const p = P(bd(1, 1), [{ name: "相识", month: 10, day: 11, year: 2018 }, { name: "第一次见面", month: 10, day: 11, year: null }]);
+    equal(dates.specialDaysOn(p, TODAY).map((d) => [d.type, d.name, d.years]),
+      [["anniversary", "第一次见面", null], ["anniversary", "相识", 8]]);
+  });
+
+  test("生日和纪念日同一天：生日排第一，其余是纪念日", () => {
+    const p = P(bd(10, 11), [{ name: "相识", month: 10, day: 11, year: 2018 }, { name: "别的日子", month: 5, day: 1, year: null }]);
+    equal(dates.specialDaysOn(p, TODAY).map((d) => d.type), ["birthday", "anniversary"]);
+  });
+
+  test("2 月 29 日的纪念日，非闰年在 2 月 28 日", () => {
+    const p = P(bd(1, 1), [{ name: "闰日", month: 2, day: 29, year: 2020 }]);
+    equal([dates.specialDaysOn(p, day(2027, 2, 28)).length, dates.specialDaysOn(p, day(2028, 2, 28)).length,
+      dates.specialDaysOn(p, day(2028, 2, 29)).length], [1, 0, 1]);
+  });
+
+  test("没有 anniversaries 字段的旧数据也能用", () => {
+    equal(dates.specialDaysOn({ name: "旧", birthday: bd(10, 11) }, TODAY).length, 1);
+  });
+});
+
 // ---------------- 数据格式 ----------------
 group("数据格式与版本（schema.js）", () => {
   test("当前版本的数据原样通过", () => {
@@ -315,6 +349,21 @@ group("数据存取（store.js，使用测试数据库）", () => {
       [["真朋友"], ["真礼物"], false]);
   });
 
+  test("纪念日：保存时检查名称和日期，自动编号", async () => {
+    const real = store.getState().people.find((p) => !p.sample);
+    await throws(() => store.updatePerson(real.id, { anniversaries: [{ name: "", month: 1, day: 1 }] }), "名称");
+    await throws(() => store.updatePerson(real.id, { anniversaries: [{ name: "x", month: 2, day: 30 }] }), "这一天");
+    await throws(() => store.updatePerson(real.id, { anniversaries: [{ name: "未来", month: 1, day: 1, year: 2999 }] }), "年份");
+    const p = await store.updatePerson(real.id, { anniversaries: [{ name: " 相识纪念日 ", month: 3, day: 14, year: 2018 }] });
+    equal([p.anniversaries.length, p.anniversaries[0].name, typeof p.anniversaries[0].id], [1, "相识纪念日", "string"]);
+  });
+
+  test("示例数据：小桃今天生日 + 纪念日，Lily 只有纪念日", () => {
+    const { people } = buildSampleData(TODAY);
+    const kinds = (p) => dates.specialDaysOn(p, TODAY).map((d) => d.type);
+    equal([kinds(people[0]), kinds(people[1]), kinds(people[2])], [["birthday", "anniversary"], ["anniversary"], []]);
+  });
+
   test("持久存储申请有结果", async () => {
     const status = await store.requestPersistentStorage();
     if (!["granted", "denied", "unsupported"].includes(status)) throw new Error(status);
@@ -378,6 +427,15 @@ group("备份（backup.js，使用测试数据库）", () => {
     await importBackup(parseBackup(JSON.stringify(backup)));
     const s = store.getState();
     equal([s.people.length, s.settings.apiKey, await store.getPhoto(orphanPhoto)], [1, "sk-ant-SECRET", null]);
+  });
+
+  test("纪念日包含在备份里；格式不对的纪念日 → 整份拒绝", async () => {
+    const backup = await createBackup();
+    const withAnniv = backup.data.people.find((p) => p.anniversaries?.length);
+    const parsed = parseBackup(JSON.stringify(backup));
+    equal(parsed.data.people.find((p) => p.id === withAnniv.id).anniversaries.map((a) => a.name), ["相识纪念日"]);
+    withAnniv.anniversaries = [{ name: "坏的", month: 13, day: 1 }];
+    await throws(() => parseBackup(JSON.stringify(backup)), "纪念日");
   });
 
   test("导入后重新读取，数据还在", async () => {

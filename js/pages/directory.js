@@ -4,6 +4,7 @@ import { egg } from "../ui/egg.js";
 import { listPeople } from "../store.js";
 import { openFriendForm } from "../modals/friend-form.js";
 import { refresh } from "../router.js";
+import { specialDaysOn } from "../dates.js";
 
 const PAGE_SIZE = 8; // 每页 8 颗蛋 + 1 个"+"，正好 3×3
 
@@ -45,14 +46,41 @@ function section({ category, title, deco, empty }) {
     ),
     people.length ? null : el("p", { class: "muted" }, `${empty}，点"+"登记一颗吧`),
     el("div", { class: "egg-grid" },
-      ...shown.map((person) =>
-        el("a", { class: "egg-tile", href: `#/person/${encodeURIComponent(person.id)}` },
-          egg(person.eggColor, { size: 56 }),
-          el("span", { class: "egg-name" }, person.name),
-        )),
+      ...shown.map(eggTile),
       addTile,
     ),
     pages > 1 ? pager(category, page, pages) : null,
+  );
+}
+
+// 一颗蛋。当天有生日或纪念日时发光：生日优先（暖金色、蛋糕），只有纪念日时 baby blue、星星
+function eggTile(person) {
+  const days = specialDaysOn(person);
+  const href = `#/person/${encodeURIComponent(person.id)}`;
+  if (!days.length) {
+    return el("a", { class: "egg-tile", href },
+      el("span", { class: "egg-wrap" }, egg(person.eggColor, { size: 56 })),
+      el("span", { class: "egg-name" }, person.name),
+    );
+  }
+
+  const isBirthday = days[0].type === "birthday";
+  const anniversaries = days.filter((d) => d.type === "anniversary");
+  const label = isBirthday
+    ? (anniversaries.length ? `今天生日 · 还有 ${anniversaries.length} 个纪念日` : "今天生日")
+    : anniversaries.map((a) => a.name).join("、");
+
+  return el("a", {
+    class: `egg-tile ${isBirthday ? "glow-birthday" : "glow-anniversary"}`,
+    href,
+    "aria-label": `${person.name}，${label}`,
+  },
+    el("span", { class: "egg-wrap" },
+      egg(person.eggColor, { size: 56 }),
+      el("span", { class: `deco special-icon ${isBirthday ? "deco-cake" : "deco-star"}`, "aria-hidden": "true" }),
+    ),
+    el("span", { class: "egg-name" }, person.name),
+    el("span", { class: "special-label" }, label),
   );
 }
 

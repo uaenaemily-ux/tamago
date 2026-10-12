@@ -23,10 +23,18 @@ export function buildSampleData(today = new Date()) {
     return { year: age == null ? null : next.year - age, month: next.month, day: next.day };
   };
 
+  // 今天的纪念日：往前 4 / 8 年（都是 4 的倍数，今天恰好是 2 月 29 日时也有效）
+  const t = toYMD(today);
+  const todayAnniversary = (name, yearsAgo) => ({ name, month: t.month, day: t.day, year: t.year - yearsAgo });
+
+  // 小桃：今天生日 + 今天也是纪念日（目录里显示"今天生日 · 还有 1 个纪念日"）
   const momo = { key: "momo", name: "小桃", category: "friend", birthday: b(0, 25), eggColor: "#F7B8CB",
-    tags: ["芭蕾风", "Jellycat", "草莓", "胶片相机"] };
+    tags: ["芭蕾风", "Jellycat", "草莓", "胶片相机"],
+    anniversaries: [todayAnniversary("第一次一起看芭蕾", 4)] };
+  // Lily：只有纪念日是今天（目录里蓝色光）
   const lily = { key: "lily", name: "Lily", category: "friend", birthday: b(2, null), eggColor: "#BFEBDD",
-    tags: ["手冲咖啡", "绿植", "极简风"] };
+    tags: ["手冲咖啡", "绿植", "极简风"],
+    anniversaries: [todayAnniversary("相识纪念日", 8)] };
   const mom = { key: "mom", name: "妈妈", category: "family", birthday: b(12, 56), eggColor: "#FFD3BA",
     tags: ["养花", "丝巾", "太极", "不喜欢浪费钱"] };
   const kai = { key: "kai", name: "阿凯", category: "friend", birthday: b(60, 27), eggColor: "#C9E6F7",

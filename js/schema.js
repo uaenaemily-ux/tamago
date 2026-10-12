@@ -27,6 +27,9 @@ export function createDefaultSettings() {
   };
 }
 
+// 朋友 / 家人的纪念日 person.anniversaries（可选，没有就是 []）：
+//   [{ id, name: "相识纪念日", month, day, year: 2018 | null }]
+
 // 偏好记录 preferences 的格式（type 可选，旧数据没有 type 时当作 prefer）：
 //   { id, personId, type: "prefer",  chosen, rejected, createdAt }  "我更喜欢这个！"
 //   { id, personId, type: "dislike", plan, createdAt }               "不喜欢"

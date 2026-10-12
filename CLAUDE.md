@@ -45,6 +45,7 @@
   - `photo:<id>`：压缩后的 JPEG dataURL（最长边 800px，质量 0.7）
 - 所有读写只通过 js/store.js
 - 人、礼物、偏好是扁平数组，用 personId 关联；删除朋友时连带删除其礼物和照片
+- 纪念日存在 `person.anniversaries`（可选，[{ id, name, month, day, year | null }]），由 store.js 的 cleanAnniversaries 检查；`dates.js` 的 `specialDaysOn(person, today)` 返回当天所有特殊日子（生日在前），目录页据此发光
 - 偏好记录有两种：`type: "prefer"`（我更喜欢这个！）和 `type: "dislike"`（不喜欢）；没有 type 的旧记录当作 prefer
 - 示例数据：人和礼物带可选字段 `sample: true`（没有该字段 = 真实数据），用于一键清除；js/sample-data.js 按"今天"推算生日
 - 日期用字符串存储（YYYY-MM-DD）；生日为 { year | null, month, day }，year 为空时不显示年龄；2 月 29 日在非闰年按 2 月 28 日提醒
@@ -79,7 +80,7 @@
 - 配色：主色粉（--color-pink-*），点缀 baby blue / 奶黄 / 薄荷 / 薰衣草；文字用暖深色 --color-text
 - 装饰两种都用，稀疏点缀、多留白：
   - 手绘线条（带轻微抖动的蜡笔感）：assets/deco/hand-*.svg（闪光星星）
-  - 天使翅膀：柔和像素风 assets/deco/pixel-angel-wing.svg（白色羽毛、淡粉紫边缘、无深色描边、根部小卷），显示尺寸用像素图的整数倍；页面标题两侧的小翅膀是 pixel-wing.svg
+  - 天使翅膀：欢迎页和首页空状态都用 assets/wing-left.png / wing-right.png（白色羽毛、粉紫描边、根部螺旋），显示尺寸用像素图的整数倍；首页空状态用 `.deco-wing` / `.deco-wing-left`；页面标题两侧的小翅膀是 pixel-wing.svg
   - 像素小图标：assets/deco/pixel-*.svg（爱心、星星、天使翅膀），导航图标 assets/nav/*.svg
   - 用法：`<span class="deco deco-heart">`；页面标题 .page-title 两侧自动加像素翅膀；.card-sparkles 给卡片角落加手绘闪光
 - 像素图标由 `python3 tools/pixel-icons.py` 从字符画生成；新增图标改脚本里的字符画再运行

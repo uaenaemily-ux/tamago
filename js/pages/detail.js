@@ -5,10 +5,12 @@ import { confirmDialog } from "../ui/confirm.js";
 import { showToast } from "../ui/toast.js";
 import { tagEditor } from "../ui/tag-editor.js";
 import { getPerson, listGifts, deletePerson, updatePerson } from "../store.js";
+import { specialDaysOn } from "../dates.js";
 import { getAge, getZodiac, formatBirthday, nextBirthday } from "../dates.js";
 import { openFriendForm } from "../modals/friend-form.js";
 import { openGiftForm } from "../modals/gift-form.js";
 import { openGiftDetail } from "../modals/gift-detail.js";
+import { openAnniversaryForm } from "../modals/anniversary-form.js";
 import { photoImg } from "../photos.js";
 import { refresh } from "../router.js";
 
@@ -32,6 +34,7 @@ export function render(container, { id }) {
     el("a", { class: "back-link", href: "#/directory" }, "‹ 目录"),
     header(person),
     tagsCard(person),
+    anniversariesCard(person),
     giftWall(person),
     el("section", { class: "card incubator-card" },
       el("h2", {}, el("span", { class: "deco deco-star" }), " 灵感孵化"),
@@ -103,6 +106,62 @@ function tagsCard(person) {
     hint,
     editor.element,
   );
+}
+
+// ---------- 纪念日 ----------
+function anniversariesCard(person) {
+  const list = [...(person.anniversaries || [])].sort((a, b) => a.month - b.month || a.day - b.day);
+  const todayNames = new Set(specialDaysOn(person).filter((d) => d.type === "anniversary").map((d) => d.name));
+
+  const rows = list.map((a) =>
+    el("li", { class: "anniversary-row" },
+      el("span", { class: "deco deco-star" }),
+      el("div", { class: "anniversary-text" },
+        el("span", { class: "anniversary-name" }, a.name),
+        el("span", { class: "muted" }, `${a.year ? `${a.year}年` : ""}${a.month}月${a.day}日`),
+      ),
+      todayNames.has(a.name) ? el("span", { class: "today-badge" }, "就是今天") : null,
+      el("span", { class: "anniversary-actions" },
+        el("button", {
+          class: "btn btn-small btn-ghost", type: "button", "aria-label": `编辑纪念日 ${a.name}`,
+          onClick: () => openAnniversaryForm({ person: getPerson(person.id), anniversary: a, onSaved: () => refresh() }),
+        }, "编辑"),
+        el("button", {
+          class: "btn btn-small btn-ghost", type: "button", "aria-label": `删除纪念日 ${a.name}`,
+          onClick: () => removeAnniversary(person, a),
+        }, "删除"),
+      ),
+    ));
+
+  return el("section", { class: "card" },
+    el("h2", { class: "section-title" },
+      el("span", { class: "deco deco-star" }), " 纪念日",
+      el("span", { class: "count num" }, String(list.length)),
+    ),
+    list.length ? el("ul", { class: "anniversary-list" }, ...rows)
+      : el("p", { class: "muted" }, "比如相识纪念日、第一次见面。到了那天，目录里 TA 的蛋会发光。"),
+    el("div", { class: "card-actions" },
+      el("button", {
+        class: "btn btn-small", type: "button",
+        onClick: () => openAnniversaryForm({ person: getPerson(person.id), onSaved: () => refresh() }),
+      }, "添加纪念日"),
+    ),
+  );
+}
+
+async function removeAnniversary(person, anniversary) {
+  const ok = await confirmDialog({
+    title: `删除「${anniversary.name}」？`, message: "删除后无法恢复。", confirmText: "删除", danger: true,
+  });
+  if (!ok) return;
+  try {
+    const current = getPerson(person.id)?.anniversaries || [];
+    await updatePerson(person.id, { anniversaries: current.filter((a) => a.id !== anniversary.id) });
+    showToast("已删除");
+    refresh();
+  } catch (err) {
+    showToast(err.message);
+  }
 }
 
 // ---------- 礼物墙：圆形照片，从新到旧；末尾"+" ----------

@@ -9,7 +9,7 @@
 
 import { createStore, get, set, del, delMany, getMany, setMany, keys } from "./vendor/idb-keyval.js";
 import { createDefaultData, createDefaultSettings, migrate, CATEGORIES, EGG_COLORS, GIFT_CATEGORIES, OCCASIONS } from "./schema.js";
-import { validateBirthday, parseISODate } from "./dates.js";
+import { validateBirthday, parseISODate, daysInMonth, toYMD, diffDays } from "./dates.js";
 
 const DATA_KEY = "tamago:data";
 const PHOTO_PREFIX = "photo:";
@@ -149,7 +149,27 @@ function cleanPerson(fields) {
     eggColor: fields.eggColor || EGG_COLORS[state.people.length % EGG_COLORS.length],
     tags: cleanTags(fields.tags),
     personalColors: Array.isArray(fields.personalColors) ? fields.personalColors : [],
+    anniversaries: cleanAnniversaries(fields.anniversaries),
   };
+}
+
+// 纪念日：{ id, name, month, day, year | null }。检查并整理，不合法时抛出中文错误
+export function cleanAnniversaries(list, today = new Date()) {
+  if (list == null) return [];
+  if (!Array.isArray(list)) throw new Error("纪念日格式不对");
+  const t = toYMD(today);
+  return list.map((a) => {
+    const name = String(a?.name ?? "").trim();
+    if (!name) throw new Error("请填写纪念日名称");
+    if (name.length > 20) throw new Error("纪念日名称太长了");
+    const { month, day } = a;
+    const year = a.year ?? null;
+    if (!Number.isInteger(month) || month < 1 || month > 12) throw new Error(`「${name}」请选择月份`);
+    if (year != null && (!Number.isInteger(year) || year < 1900 || year > t.year)) throw new Error(`「${name}」的年份不太对`);
+    if (!Number.isInteger(day) || day < 1 || day > daysInMonth(month, year ?? 2000)) throw new Error(`「${name}」这个月没有这一天`);
+    if (year != null && diffDays(t, { year, month, day }) > 0) throw new Error(`「${name}」的日期不能晚于今天`);
+    return { id: typeof a.id === "string" && a.id ? a.id : newId("an"), name, month, day, year };
+  });
 }
 
 // 标签：去空格、去空、去重

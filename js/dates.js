@@ -153,3 +153,26 @@ export function ordinal(n) {
   const suffix = { 1: "st", 2: "nd", 3: "rd" }[n % 10] || "th";
   return `${n}${suffix}`;
 }
+
+// 某人在某一天的所有特殊日子，生日排第一个，纪念日按名字顺序。没有就是空数组。
+// 返回 [{ type: "birthday", turningAge }, { type: "anniversary", name, years }]
+//   turningAge / years：满几岁 / 第几年；不知道年份时为 null
+// 2 月 29 日的生日和纪念日在非闰年按 2 月 28 日算。
+export function specialDaysOn(person, today = new Date()) {
+  const t = toYMD(today);
+  const isToday = ({ month, day }) => {
+    const d = birthdayInYear(month, day, t.year);
+    return d.month === t.month && d.day === t.day;
+  };
+  const yearsSince = (year) => (year ? t.year - year : null);
+
+  const result = [];
+  if (isToday(person.birthday)) {
+    result.push({ type: "birthday", turningAge: yearsSince(person.birthday.year) });
+  }
+  const anniversaries = (person.anniversaries || [])
+    .filter(isToday)
+    .sort((a, b) => a.name.localeCompare(b.name, "zh"))
+    .map((a) => ({ type: "anniversary", name: a.name, years: yearsSince(a.year) }));
+  return [...result, ...anniversaries];
+}

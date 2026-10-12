@@ -64,10 +64,12 @@
 .deco-heart   { --deco: url("../assets/deco/pixel-heart.svg"); }
 .deco-star    { --deco: url("../assets/deco/pixel-star.svg"); }
 .deco-gift    { --deco: url("../assets/deco/pixel-gift.svg"); }
+.deco-cake    { --deco: url("../assets/deco/pixel-cake.svg"); }
 .deco-sparkle { --deco: url("../assets/deco/hand-sparkle.svg"); width: 28px; height: 28px; }
-/* 柔和像素天使翅膀（30×23 像素图），尺寸用整数倍：2 倍 */
-.deco-wing    { --deco: url("../assets/deco/pixel-angel-wing.svg"); width: 60px; height: 46px; }
-.deco-wing-left { transform: scaleX(-1); }
+/* 天使翅膀：和欢迎页同一对像素图（wing-left.png 58×55、wing-right.png 60×55），按原始大小显示，像素清晰。
+   用法：左边 deco-wing deco-wing-left，右边 deco-wing */
+.deco-wing      { --deco: url("../assets/wing-right.png"); width: 60px; height: 55px; image-rendering: pixelated; }
+.deco-wing-left { --deco: url("../assets/wing-left.png"); width: 58px; }
 
 /* 天使翅膀 + 中间内容的组合（用于空状态等） */
 .angel {
@@ -890,3 +892,64 @@ button.shop-link { font: inherit; font-size: 13px; cursor: pointer; }
 .shop-fallback { flex-basis: 100%; margin: 2px 0 0; font-size: 13px; color: var(--color-text-soft); }
 .shop-fallback:empty { display: none; }
 .shop-fallback a { margin-left: 4px; color: var(--color-pink-700); }
+
+/* ---------- 目录：特殊日子发光 ---------- */
+.egg-wrap { position: relative; display: flex; }
+.egg-wrap .egg { position: relative; }
+/* 光晕：蛋后面一层圆形渐变，轻轻呼吸 */
+.glow-birthday .egg-wrap::before,
+.glow-anniversary .egg-wrap::before {
+  content: "";
+  position: absolute;
+  inset: -35% -55%;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: glow-breathe 2.4s ease-in-out infinite;
+}
+.glow-birthday .egg-wrap::before {
+  background: radial-gradient(closest-side, rgba(255, 186, 60, 0.95), rgba(255, 205, 100, 0.5) 55%, rgba(255, 214, 120, 0));
+}
+.glow-anniversary .egg-wrap::before {
+  background: radial-gradient(closest-side, rgba(90, 176, 235, 0.9), rgba(150, 205, 242, 0.5) 55%, rgba(201, 230, 247, 0));
+}
+.special-icon { position: absolute; top: -6px; right: -12px; width: 22px; height: 22px; }
+.glow-birthday .egg-name { text-shadow: 0 0 6px rgba(255, 190, 70, 0.95), 0 0 2px rgba(255, 220, 140, 1); }
+.glow-anniversary .egg-name { text-shadow: 0 0 6px rgba(110, 185, 235, 0.95), 0 0 2px rgba(190, 225, 248, 1); }
+/* 最多两行，保证"今天生日 · 还有 N 个纪念日"能完整显示 */
+.special-label {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  max-width: 100%;
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: center;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.glow-birthday .special-label { color: #8A5A00; }       /* 白底对比度 ≥ 4.5 */
+.glow-anniversary .special-label { color: #2B6788; }
+@keyframes glow-breathe {
+  0%, 100% { opacity: 0.6; transform: scale(0.94); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+/* 系统关闭动画时：只显示静态光晕 */
+@media (prefers-reduced-motion: reduce) {
+  .glow-birthday .egg-wrap::before,
+  .glow-anniversary .egg-wrap::before { animation: none; opacity: 0.9; }
+}
+
+/* ---------- 详情页：纪念日 ---------- */
+.anniversary-list { margin: 8px 0 0; padding: 0; list-style: none; }
+.anniversary-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 8px 0; }
+.anniversary-actions { display: flex; gap: 6px; margin-left: auto; }
+.anniversary-row + .anniversary-row { border-top: 1px dashed var(--color-pink-100); }
+.anniversary-text { display: flex; flex-direction: column; flex: 1 1 140px; min-width: 0; }
+.anniversary-name { overflow-wrap: anywhere; }
+.today-badge {
+  flex: none;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-blue);
+  font-size: 12px;
+}

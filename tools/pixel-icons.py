@@ -67,35 +67,21 @@ OOOOOOOOO
 .ORRYRRO.
 .OOOOOOO.
 """),
-    # 柔和的大天使翅膀（右翼，根部在左、翼尖朝右上）；左翼在 CSS 里水平翻转。
-    # 没有深色描边：白色羽毛 + 淡粉紫边缘(E) + 底部阴影(S) + 根部小卷(L) + 周围小闪光(K)
-    "pixel-angel-wing": ({"E": "#E2D0EB", "S": "#F3E6F2", "W": "#FFFFFF", "L": "#D6BFE2", "K": "#E9DCF1"}, """
-...................EEEEEEEEE
-...........K....EEEWWWWWWWWWE
-..........KKK..EWWWWWWWWWWWWWE
-...........K.EEWWWWWWWWWWWWWWE
-............EWWWWWWWWWWWWWWWWE
-...........EWWWWWWWWWWWWWWWWWE
-..........EWWWWWWWWWWWWWWWWWWE
-.........EWWWWWWWWWWWWWWWWWWE
-.....K...EWWWWWWWWWWWWWWWWWSE
-........EWWWWWWWWWWWWWWWWWSE
-......EEWWWWWWWWWWWWWWWWWSE
-....EEWWWWWWWWWWWWWWWWWWWE
-....EWWWLLLWWWWWWWWWWWWWE
-...EWWWLWWWLWWWWWWWWWWWEEEE
-...EWWLWWLWLWWWWWWWWWWESSWE
-...EWWLWLWWLWWWWWWWEEESWWWE
-...EWWLWWLLWWWWEEEESSSWWWSE
-...EWWWLWWWWWEESSSSWWWWWSE
-....ESWWWWWWWSSWWWWWWWSSE
-....EEWWWWWWWWWWWWWWSSEE....K
-......EWWWWWWWWWWWSSEE.....KKK
-......ESSSSSSSSSSSEE........K
-.......EEEEEEEEEEE
+    # 生日蛋糕：目录页"今天生日"用
+    "pixel-cake": ({"O": "#C27B95", "W": "#FFFFFF", "P": "#F7B8CB", "C": "#C9E6F7", "Y": "#FFE38A", "F": "#F5A04A"}, """
+.....Y.....
+....YFY....
+.....C.....
+.....C.....
+.OOOOOOOOO.
+.OWWWWWWWO.
+.OWPWWPWWO.
+.OPPPPPPPO.
+.OPPPPPPPO.
+OOOOOOOOOOO
 """),
     # 天使翅膀（右翼）；左翼在 CSS 里水平翻转
-    "pixel-wing": ({"O": "#C79AB0", "W": "#FFFFFF", "P": "#FCE4EC"}, """
+    "pixel-wing":({"O": "#C79AB0", "W": "#FFFFFF", "P": "#FCE4EC"}, """
 .......OOOO.
 .....OOWWWWO
 ...OOWWWWWO.

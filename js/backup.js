@@ -11,7 +11,7 @@
 // }
 //
 // 导入时先完整检查，任何一处不对就整份拒绝，不碰现有数据。
-import { getState, getPhotosByIds, replaceAllData, updateSettings } from "./store.js";
+import { getState, getPhotosByIds, replaceAllData, updateSettings, cleanAnniversaries } from "./store.js";
 import { migrate, CATEGORIES, CURRENT_VERSION } from "./schema.js";
 import { isPhotoDataUrl } from "./photos.js";
 import { todayISO } from "./dates.js";
@@ -122,6 +122,12 @@ function validateData(data, photos) {
       || !Number.isInteger(b.day) || b.day < 1 || b.day > 31
       || !(b.year == null || Number.isInteger(b.year))) fail(`${p.name} 的生日`);
     if (p.tags != null && (!Array.isArray(p.tags) || !p.tags.every(isText))) fail(`${p.name} 的标签`);
+    let anniversaries;
+    try {
+      anniversaries = cleanAnniversaries(p.anniversaries);
+    } catch {
+      fail(`${p.name} 的纪念日`);
+    }
     personIds.add(p.id);
     return {
       id: p.id,
@@ -131,6 +137,7 @@ function validateData(data, photos) {
       eggColor: isText(p.eggColor) ? p.eggColor : null,
       tags: p.tags || [],
       personalColors: Array.isArray(p.personalColors) ? p.personalColors.filter(isText) : [],
+      anniversaries,
       ...(p.sample ? { sample: true } : {}),
       createdAt: isText(p.createdAt) ? p.createdAt : new Date().toISOString(),
       updatedAt: isText(p.updatedAt) ? p.updatedAt : new Date().toISOString(),
