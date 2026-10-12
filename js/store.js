@@ -101,6 +101,15 @@ export async function checkPersisted() {
   }
 }
 
+// 是否以"主屏幕 App"方式运行（独立窗口，没有浏览器地址栏）
+export function isStandalone() {
+  try {
+    return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  } catch {
+    return false;
+  }
+}
+
 // 本网站大约用了多少存储空间（字节）；浏览器不支持时返回 null
 export async function estimateUsage() {
   try {

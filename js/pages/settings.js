@@ -4,6 +4,7 @@ import { showToast } from "../ui/toast.js";
 import { confirmDialog } from "../ui/confirm.js";
 import {
   getState, updateSettings, hasSampleData, clearSampleData, checkPersisted, estimateUsage,
+  requestPersistentStorage, isStandalone,
 } from "../store.js";
 import { exportBackup, readBackupFile, importBackup } from "../backup.js";
 import { DEFAULT_MODEL } from "../schema.js";
@@ -168,15 +169,28 @@ function formatDateTime(iso) {
 
 // ---------- 数据安全 ----------
 function safetyCard() {
+  const mode = el("p", { class: "muted" },
+    `打开方式：${isStandalone() ? "主屏幕 App（独立窗口）" : "浏览器"}`);
   const persist = el("p", { class: "muted" }, "正在检查…");
   const usage = el("p", { class: "muted" });
+  const retryBtn = el("button", { class: "btn btn-small", type: "button", hidden: true }, "再申请一次");
 
-  checkPersisted().then((ok) => {
+  function showPersist(ok, afterRetry = false) {
     persist.textContent = ok === true
-      ? "持久存储：已开启，浏览器不会因为空间不足自动清除这里的数据。"
+      ? "持久存储：已开启，浏览器不会因为空间不足或长期未用而自动清除这里的数据。"
       : ok === false
-        ? "持久存储：未开启（浏览器没有同意）。请务必定期导出备份。"
+        ? `持久存储：未开启（${afterRetry ? "刚才又申请了一次，" : ""}浏览器没有同意）。浏览器在存储空间紧张或长期不用时可能清除数据，请务必定期导出备份。`
         : "持久存储：这个浏览器不支持查询，请定期导出备份。";
+    retryBtn.hidden = ok !== false;
+  }
+  checkPersisted().then((ok) => showPersist(ok));
+
+  // 由用户点按钮再申请一次（浏览器决定是否同意，结果直接显示）
+  retryBtn.addEventListener("click", async () => {
+    retryBtn.disabled = true;
+    await requestPersistentStorage();
+    showPersist(await checkPersisted(), true);
+    retryBtn.disabled = false;
   });
   estimateUsage().then((r) => {
     if (r?.usage == null) return;
@@ -193,7 +207,9 @@ function safetyCard() {
       el("li", {}, "注意：从主屏幕图标打开的 tamago 和 Safari 里的数据是分开的。第一次从主屏幕打开前，请先在 Safari 里导出备份，再在主屏幕版里导入。"),
       el("li", {}, "请定期导出备份，比如每次登记完礼物后。"),
     ),
+    mode,
     persist,
+    el("div", { class: "card-actions" }, retryBtn),
     usage,
   );
 }
