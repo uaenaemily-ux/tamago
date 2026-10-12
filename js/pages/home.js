@@ -4,6 +4,8 @@ import { el } from "../ui/dom.js";
 import { egg } from "../ui/egg.js";
 import { getState, listPeople } from "../store.js";
 import { upcomingBirthdays, ordinal } from "../dates.js";
+import { backupReminder, exportBackup } from "../backup.js";
+import { showToast } from "../ui/toast.js";
 
 // 几天内（含当天）过生日的人放进大蛋区；想调整改这里
 const HERO_DAYS = 3;
@@ -16,6 +18,9 @@ export function render(container) {
   container.append(el("h1", { class: "home-logo" },
     el("img", { src: "assets/logo.png", alt: "tamago", width: 240, height: 82 }),
   ));
+
+  const reminder = backupReminderCard();
+  if (reminder) container.append(reminder);
 
   if (!people.length) {
     container.append(emptyCard(
@@ -36,6 +41,33 @@ export function render(container) {
 
   container.append(hero(featured));
   if (others.length) container.append(othersCard(others, rangeDays));
+}
+
+// ---------- 备份提醒：超过 14 天没导出时显示，点一下直接导出 ----------
+function backupReminderCard() {
+  const { due, days, never } = backupReminder(getState());
+  if (!due) return null;
+  const btn = el("button", { class: "btn btn-small", type: "button" }, "现在导出");
+  const card = el("section", { class: "backup-reminder", role: "status" },
+    el("span", { class: "deco deco-gift", "aria-hidden": "true" }),
+    el("p", {},
+      never ? "还没有备份过哦。" : `已经 ${days} 天没有备份啦。`,
+      "导出一份存起来，换手机或清理浏览器时也不怕丢。",
+    ),
+    btn,
+  );
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    try {
+      const r = await exportBackup();
+      showToast(`已导出：${r.people} 位、${r.gifts} 件礼物、${r.photos} 张照片`);
+      card.remove();
+    } catch (err) {
+      showToast(`导出失败：${err.message}`);
+      btn.disabled = false;
+    }
+  });
+  return card;
 }
 
 // ---------- 大蛋 ----------

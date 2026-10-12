@@ -14,7 +14,7 @@
 import { getState, getPhotosByIds, replaceAllData, updateSettings, cleanAnniversaries } from "./store.js";
 import { migrate, CATEGORIES, CURRENT_VERSION } from "./schema.js";
 import { isPhotoDataUrl } from "./photos.js";
-import { todayISO } from "./dates.js";
+import { todayISO, toYMD, diffDays } from "./dates.js";
 
 export const BACKUP_VERSION = 1;
 const MAX_FILE_MB = 60;
@@ -53,6 +53,23 @@ export async function exportBackup() {
   setTimeout(() => URL.revokeObjectURL(url), 10000);
   await updateSettings({ lastBackupAt: backup.exportedAt });
   return { people: backup.data.people.length, gifts: backup.data.gifts.length, photos: Object.keys(backup.photos).length };
+}
+
+// ---------- 备份提醒 ----------
+
+export const BACKUP_REMIND_DAYS = 14;
+
+// 是否该提醒备份：超过 14 天没导出（从没导出过的，从登记第一个人那天算起）。没有任何人时不提醒。
+// 返回 { due, days, never }
+export function backupReminder(state, today = new Date()) {
+  const never = !state.settings.lastBackupAt;
+  if (!state.people.length) return { due: false, days: 0, never };
+  const since = never
+    ? state.people.map((p) => p.createdAt).filter(Boolean).sort()[0]
+    : state.settings.lastBackupAt;
+  const start = since ? new Date(since) : today;
+  const days = Number.isNaN(start.getTime()) ? 0 : diffDays(toYMD(start), toYMD(today));
+  return { due: days > BACKUP_REMIND_DAYS, days, never };
 }
 
 // ---------- 导入 ----------

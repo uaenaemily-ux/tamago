@@ -7,6 +7,7 @@
 ## 技术约束
 - 纯静态：原生 HTML/CSS/JS（ES Modules），无框架、无 npm、无构建、无后端、无数据库
 - 部署：GitHub Pages；路由使用 hash（#/home）
+- iPhone 安全区域统一用 tokens.css 里的 `--safe-top / --safe-bottom / --safe-left / --safe-right`（不要直接写 env()）：顶部状态栏用 body::before 同色横条挡住，页面四边、底部导航、弹窗高度都要让出安全区域。Chrome 可用 `Emulation.setSafeAreaInsetsOverride` 模拟（上 59 / 下 34）
 - 手机优先，最小宽度 320px 不出现横向滚动（改界面后跑 tools/check-layout.py）；装饰光晕等伪元素的百分比尺寸要基于小元素（如蛋本身），不要基于整张卡片，否则会撑出屏幕
 - 本地预览：`python3 tools/serve.py`（禁止缓存，手机测试也能拿到最新文件），打开 http://localhost:8000；手机用电脑的局域网 IP（`ipconfig getifaddr en0`）
 - 当前范围：只做 PRD 中的 P0
@@ -54,7 +55,8 @@
 - 修改数据结构：schema.js 中 CURRENT_VERSION +1，并在 migrations 中加迁移函数；不改旧字段含义
 - 备份文件：{ app: "tamago", backupVersion, schemaVersion, exportedAt, data, photos }，导出时不含 apiKey
 - 导入失败不得覆盖现有数据；覆盖前二次确认
-- 启动时调用 navigator.storage.persist()；设置页提示 iPhone 从主屏幕图标打开、定期导出备份
+- 启动时调用 navigator.storage.persist()（是否同意由浏览器决定，iPhone 上即使从主屏幕打开也可能被拒绝）；设置页用大白话说明结果，提示定期导出备份
+- 备份提醒：超过 14 天没导出（从没导出过的从登记第一个人算起）时，首页顶部显示提示，可直接导出（backup.js 的 backupReminder）
 - iPhone 上从主屏幕图标打开的版本和 Safari 里的数据是分开存的；换用主屏幕版前要先在 Safari 导出备份、再到主屏幕版导入
 
 ## 安全
@@ -106,4 +108,5 @@
 ## 工作流程
 - 按上面的开发步骤逐步推进，一次只做一个步骤
 - 每完成一个步骤：告诉用户怎么测试（本地 / 手机），等用户确认测试通过后再提交一次 Git
+- 每次推送到 GitHub Pages 前，把 `js/version.js` 的 APP_VERSION 加 1；设置页最下面会显示版本号，用来确认手机拿到的是最新版本（GitHub Pages 缓存 10 分钟，主屏幕 App 要完全关掉重开）
 - 提交同时在 docs/DEVLOG.md 记录本步遇到的问题，格式：问题 / 原因 / 解决（没有问题也写一行"无"）

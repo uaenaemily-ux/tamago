@@ -239,8 +239,9 @@ body.modal-open { overflow: hidden; }
   flex-direction: column;
   width: 100%;
   max-width: 520px;
-  max-height: 92vh;
-  max-height: 92dvh;
+  /* 最高到状态栏下方为止，不会顶进状态栏 */
+  max-height: calc(92vh - var(--safe-top));
+  max-height: calc(100dvh - var(--safe-top) - 24px);
   background: var(--color-surface);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   box-shadow: var(--glow-pink);
@@ -269,7 +270,7 @@ body.modal-open { overflow: hidden; }
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  padding: 12px var(--gutter) calc(12px + env(safe-area-inset-bottom));
+  padding: 12px var(--gutter) calc(12px + var(--safe-bottom));
   border-top: var(--border-dashed);
 }
 @media (min-width: 768px) {
@@ -384,7 +385,7 @@ select.input { padding-right: 4px; }
 .toast {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--nav-height) + 16px + env(safe-area-inset-bottom));
+  bottom: calc(var(--nav-height) + 16px + var(--safe-bottom));
   z-index: 200;
   max-width: calc(100% - 32px);
   padding: 10px 18px;
@@ -615,7 +616,7 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.5; }
 
 /* ---------- 欢迎页 ---------- */
 body.no-nav .nav { display: none; }
-body.no-nav .page { margin-left: auto; margin-right: auto; padding-bottom: calc(var(--gutter) * 2 + env(safe-area-inset-bottom)); }
+body.no-nav .page { margin-left: auto; margin-right: auto; padding-bottom: calc(var(--gutter) * 2 + var(--safe-bottom)); }
 .welcome {
   display: flex;
   flex-direction: column;
@@ -956,3 +957,21 @@ button.shop-link { font: inherit; font-size: 13px; cursor: pointer; }
   background: var(--color-blue);
   font-size: 12px;
 }
+
+/* ---------- 首页：备份提醒 ---------- */
+.backup-reminder {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-bottom: var(--gutter);
+  padding: 10px 14px;
+  border: 2px dashed var(--color-pink-200);
+  border-radius: var(--radius-md);
+  background: var(--color-yellow);
+  font-size: 14px;
+}
+.backup-reminder p { flex: 1 1 180px; margin: 0; }
+.backup-reminder .deco-gift { width: 22px; height: 22px; flex: none; }
+.backup-reminder .btn { margin-left: auto; }
+.version-line { margin-top: 4px; }

@@ -31,6 +31,9 @@ SETUPS = {
     "onboarded": f"(async () => {{ {IMPORTS} await s.updateSettings({{ onboarded: true }}); return true; }})()",
     "sample": f"""(async () => {{ {IMPORTS}
         await s.loadSampleData(d.buildSampleData()); await s.updateSettings({{ apiKey: 'sk-ant-FAKE' }}); return true; }})()""",
+    # 示例数据 + 上次备份在很久以前（首页出现备份提醒）
+    "old-backup": f"""(async () => {{ {IMPORTS}
+        await s.loadSampleData(d.buildSampleData()); await s.updateSettings({{ lastBackupAt: '2026-01-01T08:00:00.000Z' }}); return true; }})()""",
     # 只有一个人，生日在 60 天后（首页"30 天内没有人过生日"）
     "far": f"""(async () => {{ {IMPORTS}
         const t = new Date(); const f = new Date(t.getFullYear(), t.getMonth(), t.getDate() + 60);
@@ -69,6 +72,7 @@ SCENARIOS = [
     ("01-欢迎页", "none", "#/welcome", None),
     ("02-首页-还没有守护蛋", "onboarded", "#/home", None),
     ("03-首页-大蛋和小蛋", "sample", "#/home", None),
+    ("03b-首页-备份提醒", "old-backup", "#/home", None),
     ("04-首页-30天内没人", "far", "#/home", None),
     ("05-目录", "sample", "#/directory", None),
     ("06-登记弹窗", "sample", "#/directory", f"{FIND} btn('添加').click();"),

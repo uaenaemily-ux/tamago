@@ -6,7 +6,7 @@ import { migrate, createDefaultData, CURRENT_VERSION } from "../js/schema.js";
 import * as store from "../js/store.js";
 import { isPhotoDataUrl, compressImage } from "../js/photos.js";
 import { buildSampleData } from "../js/sample-data.js";
-import { createBackup, parseBackup, importBackup, backupFileName } from "../js/backup.js";
+import { createBackup, parseBackup, importBackup, backupFileName, backupReminder } from "../js/backup.js";
 import { callAI } from "../js/ai.js";
 import { buildPrompt, parsePlans, incubate, findBudget, PLANS_SCHEMA, parseHints, parseIdeas, expandIdeas, cleanKeyword } from "../js/incubator-logic.js";
 import { SHOP_PLATFORMS, buildSearchUrl, buildAppUrl, platformAction, isMobileDevice } from "../js/shop-platforms.js";
@@ -388,6 +388,18 @@ group("备份（backup.js，使用测试数据库）", () => {
     const parsed = parseBackup(JSON.stringify(await createBackup()));
     equal([parsed.summary.people, parsed.summary.gifts, parsed.summary.photos],
       [s.people.length, s.gifts.length, 1]);
+  });
+
+  test("备份提醒：超过 14 天才提醒；从没备份过时从登记第一个人算起；没有人不提醒", () => {
+    const st = (lastBackupAt, createdAt = ["2026-09-01T08:00:00Z"]) => ({
+      settings: { lastBackupAt }, people: createdAt.map((c) => ({ createdAt: c })) });
+    equal([
+      backupReminder(st("2026-09-27T08:00:00Z"), TODAY).due,             // 14 天：还不提醒
+      backupReminder(st("2026-09-26T08:00:00Z"), TODAY),                  // 15 天：提醒
+      backupReminder(st(null, ["2026-10-05T08:00:00Z"]), TODAY).due,      // 从没备份，刚开始用 6 天
+      backupReminder(st(null, ["2026-10-01T08:00:00Z", "2026-09-20T08:00:00Z"]), TODAY), // 从最早登记的 9/20 算起
+      backupReminder({ settings: { lastBackupAt: null }, people: [] }, TODAY).due,
+    ], [false, { due: true, days: 15, never: false }, false, { due: true, days: 21, never: true }, false]);
   });
 
   test("文件名带日期", () => {

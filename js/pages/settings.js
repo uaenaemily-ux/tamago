@@ -3,9 +3,9 @@ import { el } from "../ui/dom.js";
 import { showToast } from "../ui/toast.js";
 import { confirmDialog } from "../ui/confirm.js";
 import {
-  getState, updateSettings, hasSampleData, clearSampleData, checkPersisted, estimateUsage,
-  requestPersistentStorage, isStandalone,
+  getState, updateSettings, hasSampleData, clearSampleData, checkPersisted, estimateUsage, isStandalone,
 } from "../store.js";
+import { APP_VERSION } from "../version.js";
 import { exportBackup, readBackupFile, importBackup } from "../backup.js";
 import { DEFAULT_MODEL } from "../schema.js";
 import { diffDays, toYMD } from "../dates.js";
@@ -19,6 +19,7 @@ export function render(container) {
     backupCard(),
     safetyCard(),
     hasSampleData() ? sampleCard() : null,
+    versionLine(),
   ].filter(Boolean));
 }
 
@@ -173,24 +174,12 @@ function safetyCard() {
     `打开方式：${isStandalone() ? "主屏幕 App（独立窗口）" : "浏览器"}`);
   const persist = el("p", { class: "muted" }, "正在检查…");
   const usage = el("p", { class: "muted" });
-  const retryBtn = el("button", { class: "btn btn-small", type: "button", hidden: true }, "再申请一次");
 
-  function showPersist(ok, afterRetry = false) {
+  // 是否长期保存由浏览器自己决定（启动时已申请过），这里只用大白话说明结果
+  checkPersisted().then((ok) => {
     persist.textContent = ok === true
-      ? "持久存储：已开启，浏览器不会因为空间不足或长期未用而自动清除这里的数据。"
-      : ok === false
-        ? `持久存储：未开启（${afterRetry ? "刚才又申请了一次，" : ""}浏览器没有同意）。浏览器在存储空间紧张或长期不用时可能清除数据，请务必定期导出备份。`
-        : "持久存储：这个浏览器不支持查询，请定期导出备份。";
-    retryBtn.hidden = ok !== false;
-  }
-  checkPersisted().then((ok) => showPersist(ok));
-
-  // 由用户点按钮再申请一次（浏览器决定是否同意，结果直接显示）
-  retryBtn.addEventListener("click", async () => {
-    retryBtn.disabled = true;
-    await requestPersistentStorage();
-    showPersist(await checkPersisted(), true);
-    retryBtn.disabled = false;
+      ? "这台设备会长期保存这里的数据。偶尔导出一份备份，换手机时也能用。"
+      : "这台设备无法保证长期保存这里的数据，建议定期导出备份。";
   });
   estimateUsage().then((r) => {
     if (r?.usage == null) return;
@@ -209,9 +198,24 @@ function safetyCard() {
     ),
     mode,
     persist,
-    el("div", { class: "card-actions" }, retryBtn),
     usage,
   );
+}
+
+// ---------- 版本号（确认手机拿到的是最新版本）+ 安全区域高度 ----------
+function versionLine() {
+  const line = el("p", { class: "muted small-print version-line" }, `tamago v${APP_VERSION}`);
+  // 读出 CSS 里 iPhone 安全区域的实际高度（普通浏览器里都是 0）
+  requestAnimationFrame(() => {
+    const probe = el("div", { style: { position: "fixed", visibility: "hidden", paddingTop: "var(--safe-top)", paddingBottom: "var(--safe-bottom)" } });
+    document.body.append(probe);
+    const s = getComputedStyle(probe);
+    const top = Math.round(parseFloat(s.paddingTop));
+    const bottom = Math.round(parseFloat(s.paddingBottom));
+    probe.remove();
+    if (top || bottom) line.textContent += ` · 安全区域 上 ${top}px / 下 ${bottom}px`;
+  });
+  return line;
 }
 
 // ---------- 示例数据 ----------
