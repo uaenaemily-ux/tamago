@@ -122,3 +122,34 @@ export function sortByNextBirthday(people, today = new Date()) {
     .map((person) => ({ person, ...nextBirthday(person.birthday, today) }))
     .sort((a, b) => a.daysUntil - b.daysUntil || a.person.name.localeCompare(b.person.name, "zh"));
 }
+
+// 首页用：把生日分成大蛋区和小蛋区
+//   heroDays：几天内（含当天）过生日的人放进大蛋区，如 3
+//   rangeDays：首页一共显示几天内的生日，如 30
+// 返回 {
+//   featured: 大蛋区，按日期从近到远；heroDays 内没人时，放最近那一天的人
+//   others:   rangeDays 内、不在大蛋区的人 → "30 天内还有"
+//   next:     rangeDays 内没人时，下一个最近的生日（没有任何人时为 null）
+// }
+export function upcomingBirthdays(people, { heroDays, rangeDays }, today = new Date()) {
+  const sorted = sortByNextBirthday(people, today);
+  const inRange = sorted.filter((e) => e.daysUntil <= rangeDays);
+  if (!inRange.length) {
+    return { featured: [], others: [], next: sorted[0] || null };
+  }
+  // heroDays 内没人时，退而显示最近那一天的人
+  const heroLimit = Math.max(heroDays, inRange[0].daysUntil);
+  return {
+    featured: inRange.filter((e) => e.daysUntil <= heroLimit),
+    others: inRange.filter((e) => e.daysUntil > heroLimit),
+    next: null,
+  };
+}
+
+// 英文序数词：1st 2nd 3rd 4th … 11th 12th 13th … 21st 22nd
+export function ordinal(n) {
+  const mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 13) return `${n}th`;
+  const suffix = { 1: "st", 2: "nd", 3: "rd" }[n % 10] || "th";
+  return `${n}${suffix}`;
+}

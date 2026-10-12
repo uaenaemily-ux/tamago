@@ -486,3 +486,117 @@ textarea.input { resize: vertical; min-height: 80px; line-height: 1.5; }
 .gift-detail-nophoto .deco-gift { width: 48px; height: 48px; }
 .gift-detail .info-list { margin: 0; }
 .gift-reaction p { margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ---------- 首页：logo ---------- */
+.home-logo { display: flex; justify-content: center; margin: 4px 0 12px; }
+.home-logo img { width: min(240px, 70vw); height: auto; }
+@media (min-width: 768px) {
+  .home-logo { display: none; }   /* 电脑端侧边栏已经有 logo */
+}
+
+/* ---------- 首页：大蛋 ---------- */
+.hero { padding: 20px 0 16px; text-align: center; }
+.hero-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.hero-track::-webkit-scrollbar { display: none; }
+.hero-slide {
+  flex: 0 0 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0 var(--gutter);
+  scroll-snap-align: center;
+  color: var(--color-text);
+  text-decoration: none;
+}
+.hero-slide p { margin: 0; }
+.hero-egg {
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+/* 蛋后面的粉色光晕：圆形渐变，没有方形边缘 */
+.hero-egg::before {
+  content: "";
+  position: absolute;
+  inset: -12% -30%;
+  background: radial-gradient(closest-side, rgba(247, 184, 203, 0.55), rgba(247, 184, 203, 0));
+  pointer-events: none;
+}
+.hero-egg .egg { position: relative; }
+.hero-days {
+  font-size: 48px;
+  line-height: 1.1;
+  color: var(--color-pink-600);
+}
+.hero-title {
+  font-family: var(--font-title);
+  font-synthesis: none;
+  font-size: var(--text-title-md);
+  color: var(--color-pink-700);
+  overflow-wrap: anywhere;
+}
+.dots { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-pink-100); }
+.dot.is-active { background: var(--color-pink-600); }
+.hero-hint { margin: 6px 0 0; }
+
+/* 生日当天：蛋轻轻摇晃 */
+.egg-celebrate { animation: egg-wobble 2.4s ease-in-out infinite; transform-origin: 50% 90%; }
+@keyframes egg-wobble {
+  0%, 60%, 100% { transform: rotate(0); }
+  70% { transform: rotate(-6deg); }
+  80% { transform: rotate(5deg); }
+  90% { transform: rotate(-3deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .egg-celebrate { animation: none; }
+}
+
+/* ---------- 首页：小蛋横排 ---------- */
+.mini-eggs {
+  display: flex;
+  gap: 8px;
+  margin: 8px calc(var(--gutter) * -1) 0;
+  padding: 4px var(--gutter);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+.mini-eggs::-webkit-scrollbar { display: none; }
+.mini-egg {
+  flex: 0 0 76px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 2px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  text-decoration: none;
+  scroll-snap-align: start;
+}
+.mini-egg:active { background: var(--color-pink-50); }
+.mini-days { font-size: 16px; line-height: 1; color: var(--color-pink-700); }
+
+/* ---------- 首页：空状态里的"下一个生日" ---------- */
+.next-birthday {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px auto 16px;
+  padding: 8px 14px;
+  max-width: 100%;
+  border-radius: var(--radius-md);
+  background: var(--color-pink-50);
+  color: var(--color-text);
+  text-align: left;
+  text-decoration: none;
+}
+.next-birthday .egg { flex: none; }

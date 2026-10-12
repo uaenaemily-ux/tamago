@@ -127,6 +127,52 @@ group("日期计算（dates.js）", () => {
   });
 });
 
+group("首页生日（dates.js）", () => {
+  const P = (name, month, d) => ({ name, birthday: { year: null, month, day: d } });
+  const OPTS = { heroDays: 3, rangeDays: 30 };
+  const names = (list) => list.map((e) => e.person.name);
+
+  test("3 天内（含当天）的人都进大蛋区，按日期从近到远", () => {
+    // 今天 10/11：今天、3 天后、4 天后、20 天后
+    const r = dates.upcomingBirthdays([P("4天", 10, 15), P("今天", 10, 11), P("20天", 10, 31), P("3天", 10, 14)], OPTS, TODAY);
+    equal([names(r.featured), names(r.others), r.next], [["今天", "3天"], ["4天", "20天"], null]);
+  });
+
+  test("多人同一天也都在大蛋区", () => {
+    const r = dates.upcomingBirthdays([P("A", 10, 12), P("B", 10, 12), P("C", 10, 20)], OPTS, TODAY);
+    equal([r.featured.length, r.others.length], [2, 1]);
+  });
+
+  test("3 天内没人 → 大蛋区放最近那一天的人，小蛋区不重复", () => {
+    const r = dates.upcomingBirthdays([P("10天", 10, 21), P("10天b", 10, 21), P("20天", 10, 31)], OPTS, TODAY);
+    equal([names(r.featured), names(r.others)], [["10天", "10天b"], ["20天"]]);
+  });
+
+  test("天数可以调整（heroDays = 0 时只放当天）", () => {
+    const r = dates.upcomingBirthdays([P("今天", 10, 11), P("明天", 10, 12)], { heroDays: 0, rangeDays: 30 }, TODAY);
+    equal([names(r.featured), names(r.others)], [["今天"], ["明天"]]);
+  });
+
+  test("30 天内没人 → 给出下一个最近的生日", () => {
+    const r = dates.upcomingBirthdays([P("远", 12, 1), P("更远", 1, 5)], OPTS, TODAY);
+    equal([r.featured.length, r.next.person.name, r.next.daysUntil], [0, "远", 51]);
+  });
+
+  test("第 30 天也算在区间内", () => {
+    const r = dates.upcomingBirthdays([P("刚好", 11, 10)], OPTS, TODAY);
+    equal(r.featured.map((e) => e.daysUntil), [30]);
+  });
+
+  test("一个人都没有", () => {
+    equal(dates.upcomingBirthdays([], OPTS, TODAY), { featured: [], others: [], next: null });
+  });
+
+  test("英文序数词", () => {
+    equal([1, 2, 3, 4, 11, 12, 13, 21, 22, 26, 101, 111].map(dates.ordinal),
+      ["1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "22nd", "26th", "101st", "111th"]);
+  });
+});
+
 // ---------------- 数据格式 ----------------
 group("数据格式与版本（schema.js）", () => {
   test("当前版本的数据原样通过", () => {

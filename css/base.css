@@ -28,7 +28,7 @@ p { margin: 0 0 8px; }
 img { max-width: 100%; display: block; }
 
 /* 标题、数字、按钮用点阵标题字体；不让浏览器自动加粗，以免点阵变糊 */
-h1, h2, h3, .btn, .num, .nav-brand {
+h1, h2, h3, .btn, .num {
   font-family: var(--font-title);
   font-weight: normal;
   font-synthesis: none;
@@ -99,10 +99,9 @@ h2, h3 { font-size: var(--text-title-md); }
   }
   .nav-brand {
     display: block;
-    font-size: 32px;
-    color: var(--color-pink-600);
-    padding: 0 12px 16px;
+    padding: 0 4px 16px;
   }
+  .nav-brand img { width: 100%; height: auto; }
   .nav-item {
     flex: none;
     flex-direction: row;
