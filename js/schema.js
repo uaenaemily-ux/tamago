@@ -75,3 +75,11 @@ function normalize(data) {
   data.settings = { ...createDefaultSettings(), ...(data.settings || {}) };
   return data;
 }
+
+// 礼物品类和场合的输入建议（也可以自己填别的）。
+// 品类尽量统一用词，AI 判断"同品类"时更准。
+export const GIFT_CATEGORIES = [
+  "饰品", "服饰", "包包", "美妆护肤", "香水", "玩偶", "书籍", "文具",
+  "数码", "家居", "食品", "鲜花", "体验", "手作",
+];
+export const OCCASIONS = ["生日", "圣诞节", "新年", "情人节", "纪念日", "毕业", "日常惊喜"];

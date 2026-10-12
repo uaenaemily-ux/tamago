@@ -8,7 +8,7 @@
 // 这样存储失败（比如空间满了）时，页面上的数据不会和本地存的不一致。
 
 import { createStore, get, set, del, delMany } from "./vendor/idb-keyval.js";
-import { createDefaultData, migrate, CATEGORIES, EGG_COLORS } from "./schema.js";
+import { createDefaultData, migrate, CATEGORIES, EGG_COLORS, GIFT_CATEGORIES, OCCASIONS } from "./schema.js";
 import { validateBirthday, parseISODate } from "./dates.js";
 
 const DATA_KEY = "tamago:data";
@@ -187,6 +187,17 @@ export function listGifts(personId) {
   return state.gifts
     .filter((g) => g.personId === personId)
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+}
+
+// 输入建议：预设 + 已经用过的（去重），用过的排前面
+export function suggestGiftCategories() {
+  return unique([...state.gifts.map((g) => g.category), ...GIFT_CATEGORIES]);
+}
+export function suggestOccasions() {
+  return unique([...state.gifts.map((g) => g.occasion), ...OCCASIONS]);
+}
+function unique(values) {
+  return [...new Set(values.filter(Boolean))];
 }
 
 function cleanGift(fields) {

@@ -54,6 +54,19 @@ OOOOYOOOO
 .OYO.OYO.
 .OO...OO.
 """),
+    # 礼物盒：礼物墙里没有照片的礼物用它
+    "pixel-gift": ({"O": "#C79AB0", "R": "#F7B8CB", "Y": "#FFE38A"}, """
+..OO.OO..
+.OYYOYYO.
+..OOYOO..
+OOOOOOOOO
+ORRRYRRRO
+OOOOOOOOO
+.ORRYRRO.
+.ORRYRRO.
+.ORRYRRO.
+.OOOOOOO.
+"""),
     # 天使翅膀（右翼）；左翼在 CSS 里水平翻转
     "pixel-wing": ({"O": "#C79AB0", "W": "#FFFFFF", "P": "#FCE4EC"}, """
 .......OOOO.

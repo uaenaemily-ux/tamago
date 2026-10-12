@@ -7,7 +7,8 @@ import { openModal } from "../ui/modal.js";
 import { egg } from "../ui/egg.js";
 import { showToast } from "../ui/toast.js";
 import { tagEditor } from "../ui/tag-editor.js";
-import { addPerson, updatePerson, addGift } from "../store.js";
+import { field, range, datalist } from "../ui/form.js";
+import { addPerson, updatePerson, addGift, suggestGiftCategories, suggestOccasions } from "../store.js";
 import { EGG_COLORS } from "../schema.js";
 import { daysInMonth, toYMD, todayISO } from "../dates.js";
 
@@ -92,9 +93,9 @@ export function openFriendForm({ person = null, category = "friend", onSaved } =
   // ---------- 最近一次送的礼物（仅添加时） ----------
   const gift = {
     name: el("input", { class: "input", type: "text", maxlength: 40, placeholder: "比如：芭蕾舞鞋挂件" }),
-    category: el("input", { class: "input", type: "text", maxlength: 20, placeholder: "比如：饰品" }),
+    category: el("input", { class: "input", type: "text", maxlength: 20, placeholder: "比如：饰品", list: "ff-gift-categories" }),
     date: el("input", { class: "input", type: "date", max: todayISO() }),
-    occasion: el("input", { class: "input", type: "text", maxlength: 20, placeholder: "比如：生日" }),
+    occasion: el("input", { class: "input", type: "text", maxlength: 20, placeholder: "比如：生日", list: "ff-gift-occasions" }),
   };
   const giftSection = isEdit ? null : el("details", { class: "form-details" },
     el("summary", {}, "最近一次送的礼物（选填）"),
@@ -102,6 +103,8 @@ export function openFriendForm({ person = null, category = "friend", onSaved } =
     el("div", { class: "form-row" }, field("品类", gift.category), field("场合", gift.occasion)),
     field("日期", gift.date),
     el("p", { class: "muted" }, "填了会自动记到礼物墙，照片之后可以在礼物墙补充。"),
+    datalist("ff-gift-categories", suggestGiftCategories()),
+    datalist("ff-gift-occasions", suggestOccasions()),
   );
 
   // ---------- 组装 ----------
@@ -196,17 +199,4 @@ export function openFriendForm({ person = null, category = "friend", onSaved } =
     errorBox.hidden = false;
     errorBox.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }
-}
-
-// 带标签的输入项
-function field(label, input) {
-  return el("label", { class: "field" }, el("span", { class: "field-label" }, label), input);
-}
-
-// range(1, 3) → [1, 2, 3]；range(3, 1) → [3, 2, 1]
-function range(from, to) {
-  const step = from <= to ? 1 : -1;
-  const result = [];
-  for (let i = from; step > 0 ? i <= to : i >= to; i += step) result.push(i);
-  return result;
 }

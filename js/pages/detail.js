@@ -1,4 +1,4 @@
-// 详情页：头部（名字、年龄、蛋、生日、星座、倒计时）+ 喜好标签 + 礼物墙（第 5 步）+ 灵感孵化（第 9 步）
+// 详情页：头部（名字、年龄、蛋、生日、星座、倒计时）+ 喜好标签 + 礼物墙 + 灵感孵化（第 9 步）
 import { el } from "../ui/dom.js";
 import { egg } from "../ui/egg.js";
 import { confirmDialog } from "../ui/confirm.js";
@@ -7,6 +7,9 @@ import { tagEditor } from "../ui/tag-editor.js";
 import { getPerson, listGifts, deletePerson, updatePerson } from "../store.js";
 import { getAge, getZodiac, formatBirthday, nextBirthday } from "../dates.js";
 import { openFriendForm } from "../modals/friend-form.js";
+import { openGiftForm } from "../modals/gift-form.js";
+import { openGiftDetail } from "../modals/gift-detail.js";
+import { photoImg } from "../photos.js";
 import { refresh } from "../router.js";
 
 // 底部导航高亮"目录"
@@ -29,10 +32,7 @@ export function render(container, { id }) {
     el("a", { class: "back-link", href: "#/directory" }, "‹ 目录"),
     header(person),
     tagsCard(person),
-    el("section", { class: "card" },
-      el("h2", {}, el("span", { class: "deco deco-heart" }), " 礼物墙"),
-      el("p", { class: "muted" }, "历年送过的礼物会放在这里。"),
-    ),
+    giftWall(person),
     el("section", { class: "card incubator-card" },
       el("h2", {}, el("span", { class: "deco deco-star" }), " 灵感孵化"),
       el("p", { class: "muted" }, "根据 TA 的喜好和送礼记录，孵化两个礼物方案。"),
@@ -102,6 +102,42 @@ function tagsCard(person) {
     el("h2", {}, el("span", { class: "deco deco-sparkle" }), " 喜好标签"),
     hint,
     editor.element,
+  );
+}
+
+// ---------- 礼物墙：圆形照片，从新到旧；末尾"+" ----------
+function giftWall(person) {
+  const gifts = listGifts(person.id);
+
+  const tiles = gifts.map((gift) =>
+    el("button", {
+      class: "gift-tile", type: "button",
+      onClick: () => openGiftDetail(gift.id, { onChanged: () => refresh() }),
+    },
+      el("span", { class: "gift-circle" },
+        gift.photoId
+          ? photoImg(gift.photoId, { alt: "" })
+          : el("span", { class: "deco deco-gift" }),
+      ),
+      el("span", { class: "gift-name" }, gift.name),
+      gift.date ? el("span", { class: "gift-year num" }, gift.date.slice(0, 4)) : null,
+    ));
+
+  const addTile = el("button", {
+    class: "gift-tile", type: "button", "aria-label": "添加礼物",
+    onClick: () => openGiftForm({ personId: person.id, onSaved: () => refresh() }),
+  },
+    el("span", { class: "gift-circle gift-circle-add", "aria-hidden": "true" }, "+"),
+    el("span", { class: "gift-name" }, "添加"),
+  );
+
+  return el("section", { class: "card" },
+    el("h2", { class: "section-title" },
+      el("span", { class: "deco deco-heart" }), " 礼物墙",
+      el("span", { class: "count num" }, String(gifts.length)),
+    ),
+    gifts.length ? null : el("p", { class: "muted" }, "还没有送礼记录。送出礼物后记在这里，以后就不怕忘啦。"),
+    el("div", { class: "gift-grid" }, ...tiles, addTile),
   );
 }
 

@@ -4,6 +4,7 @@ import { createStore, clear } from "../js/vendor/idb-keyval.js";
 import * as dates from "../js/dates.js";
 import { migrate, createDefaultData, CURRENT_VERSION } from "../js/schema.js";
 import * as store from "../js/store.js";
+import { isPhotoDataUrl } from "../js/photos.js";
 
 const TEST_DB = "tamago-test";
 const groups = [];
@@ -201,6 +202,30 @@ group("数据存取（store.js，使用测试数据库）", () => {
     equal(store.listGifts(personId).map((g) => g.name), ["挂件", "围巾"]);
   });
 
+  test("品类建议：用过的排在前面，不重复", async () => {
+    const personId = store.getState().people[0].id;
+    await store.addGift({ personId, name: "滑雪课", category: "体验" });
+    const list = store.suggestGiftCategories();
+    equal([list[0], list.filter((c) => c === "体验").length], ["体验", 1]);
+  });
+
+  test("编辑礼物时换照片，旧照片被删除", async () => {
+    const personId = store.getState().people[0].id;
+    const oldPhoto = await store.savePhoto("data:image/jpeg;base64,OLD");
+    const gift = await store.addGift({ personId, name: "手链", photoId: oldPhoto });
+    const newPhoto = await store.savePhoto("data:image/jpeg;base64,NEW");
+    await store.updateGift(gift.id, { photoId: newPhoto });
+    equal([await store.getPhoto(oldPhoto), await store.getPhoto(newPhoto)], [null, "data:image/jpeg;base64,NEW"]);
+  });
+
+  test("删除礼物：照片一起删除", async () => {
+    const personId = store.getState().people[0].id;
+    const photoId = await store.savePhoto("data:image/jpeg;base64,CCCC");
+    const gift = await store.addGift({ personId, name: "香薰", photoId });
+    await store.deleteGift(gift.id);
+    equal([store.getGift(gift.id), await store.getPhoto(photoId)], [null, null]);
+  });
+
   test("删除朋友：礼物、照片一起删除", async () => {
     const personId = store.getState().people[0].id;
     const photoId = await store.savePhoto("data:image/jpeg;base64,BBBB");
@@ -213,6 +238,18 @@ group("数据存取（store.js，使用测试数据库）", () => {
   test("持久存储申请有结果", async () => {
     const status = await store.requestPersistentStorage();
     if (!["granted", "denied", "unsupported"].includes(status)) throw new Error(status);
+  });
+});
+
+// ---------------- 照片 ----------------
+group("照片（photos.js）", () => {
+  test("只接受图片 dataURL", () => {
+    equal([
+      isPhotoDataUrl("data:image/jpeg;base64,AAAA"),
+      isPhotoDataUrl("data:text/html;base64,AAAA"),
+      isPhotoDataUrl("javascript:alert(1)"),
+      isPhotoDataUrl(null),
+    ], [true, false, false, false]);
   });
 });
 
