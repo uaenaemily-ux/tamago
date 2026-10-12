@@ -36,11 +36,26 @@ h1, h2, h3, .btn, .num {
 h1 { font-size: var(--text-title-lg); }
 h2, h3 { font-size: var(--text-title-md); }
 
+/* 主屏幕 App 全屏时，顶部是 iPhone 状态栏（时间、信号）。
+   加一条和背景同色的固定横条挡住它下面滚过的内容；普通浏览器里 safe-area-inset-top 为 0，不影响 */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top);
+  background: var(--color-bg);
+  z-index: 50;
+  pointer-events: none;
+}
+
 .page {
   position: relative;
   max-width: 560px;
   margin: 0 auto;
   padding: var(--gutter);
+  padding-top: calc(var(--gutter) + env(safe-area-inset-top));
   /* 给底部导航和 iPhone 底部横条留空间 */
   padding-bottom: calc(var(--nav-height) + var(--gutter) + env(safe-area-inset-bottom));
 }
@@ -116,6 +131,7 @@ h2, h3 { font-size: var(--text-title-md); }
     margin-left: 200px;
     margin-right: auto;
     padding: 32px;
+    padding-top: calc(32px + env(safe-area-inset-top));
     max-width: 760px;
   }
 }
