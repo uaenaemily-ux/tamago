@@ -176,3 +176,13 @@ export function specialDaysOn(person, today = new Date()) {
     .map((a) => ({ type: "anniversary", name: a.name, years: yearsSince(a.year) }));
   return [...result, ...anniversaries];
 }
+
+// 蛋上的裂纹：生日前 3 天开始出现，返回 0–4：
+//   4 天以上 → 0 没有；3 天 → 1 小裂纹；2 天 → 2 裂纹变多；1 天 → 3 大裂纹；当天 → 4 可孵化
+export const CRACK_START_DAYS = 3;
+export const HATCH_LEVEL = 4;
+
+export function crackLevel(daysUntil) {
+  if (!Number.isInteger(daysUntil) || daysUntil < 0 || daysUntil > CRACK_START_DAYS) return 0;
+  return HATCH_LEVEL - daysUntil;
+}

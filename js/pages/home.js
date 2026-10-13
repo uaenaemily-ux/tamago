@@ -1,7 +1,7 @@
 // 首页：HERO_DAYS 天内（含当天）过生日的人以大蛋展示"Today!" / "In X Days"，
 // 多人时左右滑动；区间内其他人以小蛋横排；区间内没人时显示下一个最近的生日。
 import { el } from "../ui/dom.js";
-import { egg } from "../ui/egg.js";
+import { personEgg } from "../ui/egg.js";
 import { getState, listPeople } from "../store.js";
 import { upcomingBirthdays, ordinal } from "../dates.js";
 import { backupReminder, exportBackup } from "../backup.js";
@@ -81,7 +81,7 @@ function hero(entries) {
       el("p", { class: "hero-days num" }, daysLabel(entry.daysUntil)),
       // 光晕放在外层，用圆形渐变（不用 filter，iPhone 上会被裁成方框）
       el("span", { class: "hero-egg" },
-        egg(entry.person.eggColor, {
+        personEgg(entry.person, {
           size: 150,
           className: entry.daysUntil === 0 ? "egg-celebrate" : "",
         }),
@@ -120,7 +120,7 @@ function othersCard(entries, rangeDays) {
     el("div", { class: "mini-eggs" },
       ...entries.map((entry) =>
         el("a", { class: "mini-egg", href: `#/person/${encodeURIComponent(entry.person.id)}` },
-          egg(entry.person.eggColor, { size: 48 }),
+          personEgg(entry.person, { size: 48 }),
           el("span", { class: "egg-name" }, entry.person.name),
           el("span", { class: "mini-days num" }, `${entry.daysUntil} 天`),
         )),
@@ -139,7 +139,7 @@ function emptyCard(title, text, next = null) {
     el("h2", {}, title),
     el("p", { class: "muted" }, text),
     next ? el("a", { class: "next-birthday", href: `#/person/${encodeURIComponent(next.person.id)}` },
-      egg(next.person.eggColor, { size: 40 }),
+      personEgg(next.person, { size: 40 }),
       el("span", {},
         "下一个是 ", el("strong", {}, next.person.name), "，",
         `${next.date.month}月${next.date.day}日，还有 ${next.daysUntil} 天`,

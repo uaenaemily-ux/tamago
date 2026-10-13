@@ -1,11 +1,21 @@
 // 原创守护蛋：统一造型，只换颜色。
-// 造型：蛋形 + 左上高光 + 白色蕾丝花边（带小圆点）+ 两颗小闪光。
-// 用法：egg("#F7B8CB", { size: 64 })  → <svg> 元素
+// 造型：蛋形 + 左上高光 + 白色蕾丝花边（带小圆点）+ 两颗小闪光；生日临近时加裂纹。
+// 用法：egg("#F7B8CB", { size: 64, crack: 0–4 })  → <svg> 元素
+//       personEgg(person, { size: 64 })  → 按 TA 离生日的天数自动加裂纹
 import { EGG_COLORS } from "../schema.js";
+import { nextBirthday, crackLevel } from "../dates.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 const EGG_PATH = "M50 4 C78 4 96 48 96 76 C96 102 75 116 50 116 C25 116 4 102 4 76 C4 48 22 4 50 4 Z";
 const SPARKLE = "M0 -6 C0.8 -1.5 1.5 -0.8 6 0 C1.5 0.8 0.8 1.5 0 6 C-0.8 1.5 -1.5 0.8 -6 0 C-1.5 -0.8 -0.8 -1.5 0 -6 Z";
+
+// 裂纹（原创锯齿线），按级别依次加上：第 1 级一道小裂纹，第 4 级从顶部裂开一大道
+const CRACKS = [
+  "M14 86 L23 89 L19 96 L28 100",                        // 1：左下一小道（避开右上的闪光）
+  "M8 50 L17 54 L13 61 L22 65",                          // 2：左边一道
+  "M92 86 L83 89 L87 96 L78 101 L81 107",                // 3：右下一道
+  "M46 5 L50 15 L43 22 L49 31 L44 40 L48 47 M49 31 L57 35 L56 41", // 4：顶部裂开，带分叉
+];
 
 let uid = 0;
 
@@ -20,7 +30,7 @@ function safeColor(color) {
   return /^#[0-9a-fA-F]{6}$/.test(color || "") ? color : EGG_COLORS[0];
 }
 
-export function egg(color, { size = 64, className = "" } = {}) {
+export function egg(color, { size = 64, className = "", crack = 0 } = {}) {
   const id = `egg-clip-${++uid}`;
   const svg = svgEl("svg", {
     viewBox: "0 0 100 120",
@@ -62,6 +72,26 @@ export function egg(color, { size = 64, className = "" } = {}) {
   // 描边放最上面，盖住花边的边缘
   const outline = svgEl("path", { d: EGG_PATH, class: "egg-outline" });
 
-  svg.append(defs, body, lace, dots, shine, s1, s2, outline);
+  svg.append(defs, body, lace, dots, shine, s1, s2);
+
+  // 裂纹：裁切在蛋形内；白色细线做出裂缝边缘的高光，更立体
+  const level = Math.max(0, Math.min(CRACKS.length, crack | 0));
+  if (level) {
+    const cracks = svgEl("g", { "clip-path": `url(#${id})`, class: "egg-cracks" });
+    for (const d of CRACKS.slice(0, level)) {
+      cracks.append(svgEl("path", { d, class: "egg-crack-light", transform: "translate(1.2 1.2)" }));
+      cracks.append(svgEl("path", { d, class: "egg-crack" }));
+    }
+    svg.append(cracks);
+    svg.classList.add(`egg-crack-${level}`);
+  }
+
+  svg.append(outline);
   return svg;
+}
+
+// 某个人的蛋：颜色用 TA 的蛋色，按离下一次生日的天数加裂纹
+export function personEgg(person, options = {}) {
+  const { daysUntil } = nextBirthday(person.birthday);
+  return egg(person.eggColor, { ...options, crack: crackLevel(daysUntil) });
 }

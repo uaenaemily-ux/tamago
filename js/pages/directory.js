@@ -1,6 +1,6 @@
 // 目录页：Friends 和 Family 两个分区，每人一颗带名字的蛋；末尾"+"添加；人多时分页。
 import { el } from "../ui/dom.js";
-import { egg } from "../ui/egg.js";
+import { personEgg } from "../ui/egg.js";
 import { listPeople } from "../store.js";
 import { openFriendForm } from "../modals/friend-form.js";
 import { refresh } from "../router.js";
@@ -59,7 +59,7 @@ function eggTile(person) {
   const href = `#/person/${encodeURIComponent(person.id)}`;
   if (!days.length) {
     return el("a", { class: "egg-tile", href },
-      el("span", { class: "egg-wrap" }, egg(person.eggColor, { size: 56 })),
+      el("span", { class: "egg-wrap" }, personEgg(person, { size: 56 })),
       el("span", { class: "egg-name" }, person.name),
     );
   }
@@ -76,7 +76,7 @@ function eggTile(person) {
     "aria-label": `${person.name}，${label}`,
   },
     el("span", { class: "egg-wrap" },
-      egg(person.eggColor, { size: 56 }),
+      personEgg(person, { size: 56 }),
       el("span", { class: `deco special-icon ${isBirthday ? "deco-cake" : "deco-star"}`, "aria-hidden": "true" }),
     ),
     el("span", { class: "egg-name" }, person.name),

@@ -5,6 +5,7 @@ import * as dates from "../js/dates.js";
 import { migrate, createDefaultData, CURRENT_VERSION } from "../js/schema.js";
 import * as store from "../js/store.js";
 import { isPhotoDataUrl, compressImage } from "../js/photos.js";
+import { personEgg } from "../js/ui/egg.js";
 import { buildSampleData } from "../js/sample-data.js";
 import { createBackup, parseBackup, importBackup, backupFileName, backupReminder } from "../js/backup.js";
 import { callAI } from "../js/ai.js";
@@ -170,6 +171,17 @@ group("首页生日（dates.js）", () => {
 
   test("一个人都没有", () => {
     equal(dates.upcomingBirthdays([], OPTS, TODAY), { featured: [], others: [], next: null });
+  });
+
+  test("裂纹级别：30 天以上 0，15–30 天 1，8–14 天 2，4–7 天 3，0–3 天 4", () => {
+    equal([31, 30, 15, 14, 8, 7, 4, 3, 1, 0, -1].map(dates.crackLevel), [0, 1, 1, 2, 2, 3, 3, 4, 4, 4, 0]);
+  });
+
+  test("蛋上的裂纹：今天生日 4 道，60 天后没有", () => {
+    const soon = new Date(); const far = new Date(Date.now() + 60 * 86400000);
+    const P = (d) => ({ eggColor: "#F7B8CB", birthday: { year: null, month: d.getMonth() + 1, day: d.getDate() } });
+    const count = (svg) => svg.querySelectorAll(".egg-crack").length;
+    equal([count(personEgg(P(soon))), count(personEgg(P(far)))], [4, 0]);
   });
 
   test("英文序数词", () => {

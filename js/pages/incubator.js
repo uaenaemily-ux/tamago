@@ -2,7 +2,7 @@
 // 每个方案：我更喜欢这个！/ 不喜欢 / 就送这个；选定喜欢的方案后可"展开灵感清单"（具体方向 + 购物平台搜索链接）
 // 结果下方可以再给提示词继续 brainstorm；同一次孵化里重新孵化会避开推荐过的和不喜欢的方案。
 import { el } from "../ui/dom.js";
-import { egg } from "../ui/egg.js";
+import { personEgg } from "../ui/egg.js";
 import { showToast } from "../ui/toast.js";
 import { photoImg } from "../photos.js";
 import { getPerson, listGifts, getState, addGift, addPreference, suggestOccasions } from "../store.js";
@@ -93,7 +93,7 @@ export function render(container, { id }) {
     // 注意：浏览器的 replaceChildren 会把 null 显示成文字 "null"，所以先过滤掉
     view.replaceChildren(...[
       el("section", { class: "card incubator-head" },
-        egg(person.eggColor, { size: 64 }),
+        personEgg(person, { size: 64 }),
         el("div", {},
           el("h2", {}, `为 ${person.name} 孵化礼物灵感`),
           el("p", { class: "muted" }, "AI 会参考 TA 的喜好标签和送礼记录，给出两个不同方向的方案。"),
@@ -126,7 +126,7 @@ export function render(container, { id }) {
     const myRun = ++runId;
     view.replaceChildren(
       el("section", { class: "card hatching", role: "status" },
-        el("div", { class: "hatching-egg" }, egg(person.eggColor, { size: 120, className: "egg-shake" })),
+        el("div", { class: "hatching-egg" }, personEgg(person, { size: 120, className: "egg-shake" })),
         el("p", { class: "hatching-text" }, "孵化中…"),
         el("p", { class: "muted" }, "通常需要十几秒到半分钟"),
       ),
@@ -157,7 +157,7 @@ export function render(container, { id }) {
     const needsSettings = ["no_key", "auth", "permission", "not_found", "billing"].includes(err.code);
     view.replaceChildren(
       el("section", { class: "card empty" },
-        el("div", { class: "hatching-egg" }, egg(person.eggColor, { size: 72 })),
+        el("div", { class: "hatching-egg" }, personEgg(person, { size: 72 })),
         el("h2", {}, "这次没孵化出来"),
         el("p", {}, err.message || "出了点问题，请重新孵化"),
         el("div", { class: "card-actions center" },

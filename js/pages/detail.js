@@ -1,6 +1,6 @@
 // 详情页：头部（名字、年龄、蛋、生日、星座、倒计时）+ 喜好标签 + 礼物墙 + 灵感孵化入口
 import { el } from "../ui/dom.js";
-import { egg } from "../ui/egg.js";
+import { personEgg } from "../ui/egg.js";
 import { confirmDialog } from "../ui/confirm.js";
 import { showToast } from "../ui/toast.js";
 import { tagEditor } from "../ui/tag-editor.js";
@@ -50,7 +50,7 @@ function header(person) {
   const next = nextBirthday(person.birthday);
 
   return el("section", { class: "card card-sparkles detail-head" },
-    egg(person.eggColor, { size: 96 }),
+    personEgg(person, { size: 96 }),
     el("h1", { class: "detail-name" },
       person.name,
       age != null ? el("span", { class: "detail-age num" }, `（${age}）`) : null,
